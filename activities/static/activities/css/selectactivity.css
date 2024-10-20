@@ -1,0 +1,19 @@
+.container{
+    margin-top: 12rem;
+}
+.modal.is-active {
+  display: flex;
+}
+.modal {
+  display: none;
+}
+.is-one-fifth {
+    width: 20%;
+}
+.card.is-shady {
+    box-shadow: 0 4px 10px 0 rgba(96, 105, 149, 0.8);
+}
+.button.is-link {
+    background-color: #ff5b22;
+    border-color: #ff5b22;
+}

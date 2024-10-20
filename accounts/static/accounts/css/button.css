@@ -1,0 +1,10 @@
+.button.is-success {
+    background-color: #242e60; /* Button color */
+    border-color: #242e60;
+    color: white;
+}
+
+.button.is-success:hover {
+    background-color: #242e60; /* Button hover color */
+    border-color: #242e60;
+}

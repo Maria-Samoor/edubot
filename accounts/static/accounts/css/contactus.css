@@ -1,0 +1,15 @@
+.hero{
+    margin: -7rem;
+    overflow:hidden;
+}
+.custom-button {
+    background-color: #242e60 !important;
+    color: #fff; /* Text color */
+}
+body {
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: none;
+}

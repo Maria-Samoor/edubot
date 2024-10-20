@@ -1,0 +1,69 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}FAQ{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+<link rel="stylesheet" href="{% static 'accounts/css/faq.css' %}">
+<body>
+<div class="container">
+    <div class="wrapper">
+        <div class="section">
+            <header>
+                <h1>Frequently Asked Questions</h1>
+            </header>
+            <div class="faq-card" onclick="toggleAnswer(this)">
+                <div class="question">
+                    <h2>What is the EduBot system?</h2>
+                    <div class="question-arrow"></div>
+                </div>
+                <div class="answer">
+                    <hr class="custom">
+                    <p>
+                        EduBot is an educational system designed to support children with learning difficulties. It combines humanoid robotics with a dedicated website for educators to select activities, monitor progress, and receive reports. The robot interacts with children using activities focused on motor skills, social integration, and personalized learning.
+                    </p>
+                </div>
+            </div>
+            <div class="faq-card" onclick="toggleAnswer(this)">
+                <div class="question">
+                    <h2>What can educators do on the EduBot website?</h2>
+                        <div class="question-arrow"></div>
+                </div>
+                <div class="answer">
+                    <hr class="custom">
+                    <p>
+                        On the EduBot website, educators can select and customize activities tailored to each child’s learning needs. They can track student progress in real-time, receive detailed reports on performance, and adjust the difficulty or type of activity as needed. The platform also enables educators to set up user profiles for each student.
+                    </p>
+                </div>
+            </div>
+            <div class="faq-card" onclick="toggleAnswer(this)">
+                <div class="question">
+                    <h2>How does the EduBot system help children with learning difficulties?</h2>
+                        <div class="question-arrow"></div>
+                </div>
+                <div class="answer">
+                    <hr class="custom">
+                    <p>
+                        EduBot uses a humanoid robot to engage children through interactive activities like counting games, color matching, and body part recognition. The system provides positive feedback and hints for incorrect answers, helping children to learn at their own pace in a supportive environment.
+                    </p>
+                </div>
+            </div>
+            <div class="faq-card" onclick="toggleAnswer(this)">
+                <div class="question">
+                    <h2>What types of activities can be selected for the children?</h2>
+                        <div class="question-arrow"></div>
+                </div>
+                <div class="answer">
+                    <hr class="custom">
+                    <p>
+                       Educators can choose from various activities such as color matching, finger counting, shape recognition, and more. Each activity is designed to support cognitive and motor development while encouraging interaction and engagement through the humanoid robot or external hardware like buttons and sensors.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'accounts/js/faq.js' %}"></script>
+</body>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'activities/base.html' %}  <!-- Extend from the base template -->
+{% load static %}  <!-- Load static files -->
+
+{% block title %}Select Child{% endblock %}  <!-- Define the title block -->
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" /> 
+<link rel="stylesheet" href="{% static 'activities/css/card.css' %}">
+
+<div class="card-container">
+{% for child in children %}
+<div class="card" style="margin-bottom: 20px;">
+  <header class="card-header">
+    <p class="card-header-title">{{ child.name }}</p> <!-- Render child's name -->
+  </header>
+  <div class="card-content">
+    <div class="content">
+      <strong>● Age:</strong> {{ child.age }} years old<br />
+      <strong>● Gender:</strong> {{ child.get_gender_display }}<br /> <!-- Render gender -->
+      <strong>● Learning Difficulty:</strong> 
+      {% if child.learning_difficulty %}
+          {{ child.learning_difficulty }}
+      {% else %}
+          None
+      {% endif %}
+    </div>
+  </div>
+  <footer class="card-footer" style="background-color: #242e60;">
+    <a href="{% url 'selectactivity' %}" class="card-footer-item" style="color: #fcfdff;"><strong>Select</strong></a>
+    <!-- Delete Form -->
+    <form method="POST" action="{% url 'delete_child' child.id %}" style="display:inline;">
+      {% csrf_token %}
+      
+      <button type="submit" class="card-footer-item" style="color: #fcfdff; width: 9rem;">
+          <strong style="color: #fcfdff;">Delete</strong>
+      </button>
+  </form>
+  </footer>
+</div>
+{% empty %}
+<p>No children found.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'activities/base.html' %}  <!-- Extend from the base template -->
+{% load static %}  <!-- Load static files -->
+
+{% block title %}Select Activity{% endblock %}  <!-- Define the title block -->
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" />
+<link rel="stylesheet" href="{% static 'activities/css/selectactivity.css' %}">
+
+<section class="container">
+    <div class="columns features">
+        <div class="column is-one-fifth">
+            <div class="card is-shady" onclick="openModal('modal-2')">
+                <div class="card-image">
+                    <figure class="image is-4by3">
+                        <img src="{% static 'activities/images/robot.png' %}" alt="Activity image">
+                    </figure>
+                </div>
+                <div class="card-content" style="background-color: #242e60;">
+                    <h4 style="font-weight: bold;  color: white; text-align: center; ">Touch Correct Body Part</h4>   
+                </div>
+            </div>
+      </div>
+        <div class="column is-one-fifth">
+            <div class="card is-shady" onclick="openModal('modal-3')">
+            <div class="card-image">
+                <figure class="image is-4by3">
+                    <img src="{% static 'activities/images/robot.png' %}" alt="Activity image">
+                </figure>
+            </div>
+            <div class="card-content" style="background-color: #242e60;">
+                <h4 style="font-weight: bold;  color: white; text-align: center; ">Match the Color Game</h4>            
+            </div>
+        </div>
+      </div>
+
+        <div class="column is-one-fifth">
+            <div class="card is-shady" onclick="openModal('modal-3')">
+            <div class="card-image">
+                <figure class="image is-4by3">
+                    <img src="{% static 'activities/images/robot.png' %}" alt="Activity image">
+                </figure>
+            </div>
+            <div class="card-content" style="background-color: #242e60;">
+                <h4 style="font-weight: bold;  color: white; text-align: center; ">Finger Counting Game</h4>            </div>
+        </div>
+      </div>
+        <div class="column is-one-fifth">
+            <div class="card is-shady" onclick="openModal('modal-3')">
+            <div class="card-image">
+                <figure class="image is-4by3">
+                    <img src="{% static 'activities/images/robot.png' %}" alt="Activity image">
+                </figure>
+            </div>
+            <div class="card-content" style="background-color: #242e60;">
+                <h4 style="font-weight: bold;  color: white; text-align: center; ">Find the Different Image </h4>            </div>
+        </div>
+      </div>
+        <div class="column is-one-fifth">
+        <div class="card is-shady" onclick="openModal('modal-1')">
+            <div class="card-image">
+                <figure class="image is-4by3">
+                <img src="{% static 'activities/images/robot.png' %}" alt="Activity image">
+                </figure>
+            </div>
+            <div class="card-content" style="background-color: #242e60;">
+                <h4 style="font-weight: bold;  color: white; text-align: center; ">Learning with Buttons
+                </h4>
+            </div>
+        </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- Modal 1 -->
+  <div id="modal-1" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <p>Purus semper eget duis at tellus at urna condimentum mattis. Integer enim neque volutpat ac tincidunt vitae semper quis.</p>
+        <button class="button is-link">Start Activity</button>
+      </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close" onclick="closeModal('modal-1')"></button>
+  </div>
+
+  <!-- Modal 2 -->
+  <div id="modal-2" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <p>Ut venenatis tellus in metus vulputate. Faucibus turpis in eu mi bibendum neque egestas.</p>
+        <button class="button is-link" >Start Activity</button>
+      </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close" onclick="closeModal('modal-2')"></button>
+  </div>
+
+  <!-- Modal 3 -->
+  <div id="modal-3" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <p>Imperdiet dui accumsan sit amet nulla facilisi morbi. Commodo viverra maecenas accumsan lacus vel facilisis.</p>
+        <button class="button is-link">Start Activity</button>
+      </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close" onclick="closeModal('modal-3')"></button>
+  </div>
+
+  <script src="{% static 'activities/js/selectactivity.js' %}"></script>
+
+{% endblock %}

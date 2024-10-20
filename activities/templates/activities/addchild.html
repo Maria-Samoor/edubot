@@ -1,0 +1,64 @@
+{% extends 'activities/base.html' %}  <!-- Extend from the base template -->
+{% load static %}  <!-- Load static files -->
+
+{% block title %}Add Child{% endblock %}  <!-- Define the title block -->
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" />
+<link rel="stylesheet" href="{% static 'activities/css/addchild.css' %}">
+<div class="container">
+    <div class="div1">
+        <img class="pic" src="{% static 'activities/images/profile.png' %}" alt="" style="margin-top: -5rem;">
+    </div>
+    
+    <div class="div2">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="inf" style="color: #242e60;">Child Information</div>
+            <hr style="color: #4b4b4b;">
+
+            <!-- Full Name Field -->
+            <div>
+                <label for="name">Full Name</label>
+                <input class="input-field {% if form.name.errors %}is-danger{% endif %}" type="text" id="name" name="name" placeholder="Enter child's full name" value="{{ form.name.value|default_if_none:'' }}" style="color:#4b4b4b; opacity:2;" required>
+                {% if form.name.errors %}
+                    <p class="help is-danger">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Date of Birth Field -->
+            <div>
+                <label for="date_of_birth">Date of Birth</label>
+                <input class="input-field {% if form.date_of_birth.errors %}is-danger{% endif %}" type="date" id="date_of_birth" name="date_of_birth" value="{{ form.date_of_birth.value|default_if_none:'' }}" style="color:#4b4b4b; opacity:2;" required>
+                {% if form.date_of_birth.errors %}
+                    <p class="help is-danger">{{ form.date_of_birth.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Gender Field -->
+            <div>
+                <label for="gender">Gender</label>
+                <select class="input-field {% if form.gender.errors %}is-danger{% endif %}" id="gender" name="gender" style="color:#4b4b4b; opacity:2;" required>
+                    <option value="" disabled {% if form.gender.value == None %}selected{% endif %}>Select Child's Gender</option>
+                    <option value="male" {% if form.gender.value == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if form.gender.value == 'female' %}selected{% endif %}>Female</option>
+                </select>
+                {% if form.gender.errors %}
+                    <p class="help is-danger">{{ form.gender.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Learning Difficulty Field -->
+            <div>
+                <label for="learning_difficulty">Learning Difficulty</label>
+                <input class="input-field {% if form.learning_difficulty.errors %}is-danger{% endif %}" type="text" id="learning_difficulty" name="learning_difficulty" placeholder="Enter child's learning difficulty" value="{{ form.learning_difficulty.value|default_if_none:'' }}" style="color:#4b4b4b; opacity:2;" required>
+                {% if form.learning_difficulty.errors %}
+                    <p class="help is-danger">{{ form.learning_difficulty.errors.0 }}</p>
+                {% endif %}
+            </div>  
+            <button class="submit-btn" type="submit" style="font-weight: bold; margin-top: -2rem; margin-left: -16rem;">Add Child</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

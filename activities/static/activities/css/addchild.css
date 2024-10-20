@@ -1,0 +1,79 @@
+body {
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-size: cover;
+    background-position: center;
+}
+.container {
+    display: flex;
+    flex-direction: row;
+    height: 90vh;
+    box-shadow: 1px 2px 6px 1px #ccc;
+    width: 60%;
+    height: 70%;
+}
+
+.div1 {
+    background: rgb(36, 46, 96);
+    background: linear-gradient(30deg, rgb(20, 28, 66) 0%, rgba(19, 26, 65, 0.8) 35%, rgb(36, 47, 102) 100%);
+    width: 40%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    color: aliceblue;
+    text-shadow: 1px 1px 1px rgba(96, 105, 149, 0.8);
+    box-shadow: 1px 2px 6px 1px rgba(96, 105, 149, 0.8);
+    position: relative;
+}
+
+.pic {
+    height: 200px;
+    width: 200px;
+}
+
+.div2 {
+    width: 60%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    position: relative;
+}
+
+hr {
+    height: 1px;
+    border: none;
+    background-color: #ccc;
+    margin: 10px 0;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+input[type="text"], input[type="date"], select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.submit-btn {
+    background-color:#ed451d;
+    color: white;
+    border: none;
+    padding: 0.7rem;
+    border-radius: 5px;
+    cursor: pointer;
+    position: absolute; 
+}
+
+
+.submit-btn:hover {
+    background-color:#ed451d;
+}
+label{
+    color: #242e60;
+}

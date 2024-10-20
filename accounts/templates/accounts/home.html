@@ -1,0 +1,21 @@
+{% extends 'accounts/base.html' %}  <!-- Extend from the base template -->
+{% load static %}  <!-- Load static files -->
+
+{% block title %}Home{% endblock %}  <!-- Define the title block -->
+
+{% block content %}
+    <style>
+        body {
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url("{% static 'accounts/images/home.png' %}");
+            background-size: 70%;
+            background-position: center;
+            background-repeat: no-repeat; /* Ensures the background doesn't repeat */
+        }
+    </style>
+    <div>
+    </div>
+{% endblock %}

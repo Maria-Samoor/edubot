@@ -1,0 +1,41 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'accounts/images/logo.png' %}">
+    <title>{% block title %}EduBot{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="{% static 'accounts/css/styles.css' %}">
+</head>
+<body>
+    <div class="menu">
+        <div class="logo">
+            <h1>EduBot </h1>
+            <img src="{% static 'accounts/images/logo.png' %}" alt="">
+        </div>
+        <div class="btns">
+            <a class="nav" href="{% url 'home' %}">Home</a>
+            <a class="nav" href="{% url 'login' %}">Log In</a>
+            <a class="nav" href="{% url 'signup' %}">Sign Up</a>
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link" style="color: #fcfdff; text-shadow: 1px 1px 1px #fcfdff;" href="">Help</a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="{% url 'faq' %}">FAQ</a>
+                    <a class="navbar-item" href="{% url 'contactus' %}">Contact Us</a>
+                </div>
+            </div> 
+        </div>
+    </div>
+    {% block content %}
+    <div class="container">
+        <div class="column is-4 is-offset-4">
+            <div class="box has-background-light">
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+</body>
+</html>

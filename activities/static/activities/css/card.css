@@ -1,0 +1,16 @@
+.card-container {
+    display: flex; /* Enables flexbox layout */
+    flex-wrap: wrap; /* Allows cards to wrap if they exceed the container width */
+    justify-content: space-around; /* Distributes cards evenly */
+    margin: 20px; /* Adds margin around the container */
+}
+
+/* Add styles for individual cards */
+.card {
+    width: 300px; /* Controls the width */
+    margin: 20px auto; /* Adds margin and centers the card */
+    box-shadow: 0 4px 10px rgba(36, 46, 96, 0.5); 
+}
+.card-content {
+    padding: 20px; /* Controls internal padding */
+}

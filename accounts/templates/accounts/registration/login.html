@@ -1,0 +1,75 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+
+{% block title %}Log In{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'accounts/css/button.css' %}">  <!-- Link to the CSS file -->
+    <div class="container">
+        <div class="column is-4 is-offset-4">
+            <div class="box has-background-light">
+                <form method="POST">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="notification is-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% for message in messages %}
+                        <p class="help is-danger">{{ message|safe }}</p>  <!-- Display flash messages (such as success or error messages) -->
+                    {% endfor %}
+
+                    <!-- Email or Username Field -->
+                    <div class="field">
+                        <label class="label">Email or Username</label>
+                        <div class="control">
+                            <input class="input is-medium {% if form.email_or_username.errors %}is-danger{% endif %}" type="text" name="email_or_username" placeholder="Enter your email or username" value="{{ form.email_or_username.value|default_if_none:'' }}">
+                        </div>
+                        
+                        {% if form.email_or_username.errors %}
+                            <p class="help is-danger">{{ form.email_or_username.errors.0 }}</p>  <!-- Display validation errors for the email field -->
+                        {% endif %}
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="field">
+                        <label class="label">Password</label>
+                        <div class="control">
+                            <input class="input is-medium  {% if form.password.errors %}is-danger{% endif %}" type="password" name="password" placeholder="Enter your password">
+                        </div>
+                        {% if form.password.errors %}
+                            <p class="help is-danger">{{ form.password.errors.0 }}</p>  <!-- Display validation errors for the password field -->
+                        {% endif %}
+                    </div>
+
+                    <!-- CAPTCHA Field -->
+                    <div class="field">
+                        <label class="label">CAPTCHA</label>
+                        <div class="control">
+                            {{ form.captcha }}  <!-- Render the CAPTCHA field -->
+                        </div>
+                        {% if form.captcha.errors %}
+                            <p class="help is-danger">{{ form.captcha.errors.0 }}</p>  <!-- Display validation errors for the CAPTCHA field -->
+                        {% endif %}
+                    </div>
+
+                    <!-- Forgot Password and Signup Links -->
+                    <div class="field">
+                        <p class="control">
+                            <span>Forgot your password? <a style="color: #242e60;" href="{% url 'forgetpassword' %}">Reset it</a></span><br>
+                            <span>Don't have an account? <a style="color: #242e60;" href="{% url 'signup' %}">Create account</a></span>
+                        </p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="field">
+                        <button class="button is-success is-fullwidth is-medium">Log In</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

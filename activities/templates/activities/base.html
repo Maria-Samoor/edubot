@@ -1,0 +1,32 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'activities/images/logo.png' %}">
+    <title>{% block title %}EduBot{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="{% static 'activities/css/styles.css' %}">
+</head>
+<body>
+    <div class="menu">
+        <div class="logo">
+            <h1>EduBot </h1>
+            <img src="{% static 'activities/images/logo.png' %}" alt="">
+        </div>
+        <div class="btns">
+            <a class="nav" href="{% url 'homepage' %}">Home</a>
+            <a class="nav" href="{% url 'selectchild' %}">Select Child</a>
+            <a class="nav" href="{% url 'addchild' %}">Add Child</a>
+            <a class="nav" href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+    {% block content %}
+    <div class="container">
+        
+    </div>
+    {% endblock content %}
+</body>
+</html>
