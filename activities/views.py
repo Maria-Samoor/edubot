@@ -2,9 +2,8 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
-from .models import Child
+from .models import Child, Activity
 from .forms import ChildForm
-from django.contrib import messages
 # Create your views here.
 @login_required
 def home(request):
@@ -82,21 +81,6 @@ def add_child(request):
 
 
 @login_required
-def select_activity(request):
-    """
-    View for the select activity page of the application.
-    
-    Renders the select activity page template located at 'activities/selectactivity.html'.
-    
-    Args:
-        request: The HTTP request object.
-    
-    Returns:
-        HttpResponse: Rendered select activity page template.
-    """
-    return render(request, 'activities/selectactivity.html')
-
-@login_required
 def logout_view(request):
     """
     View for the login  page of the application.
@@ -111,3 +95,23 @@ def logout_view(request):
     """
     logout(request)
     return redirect('login')
+
+@login_required
+def select_activity(request):
+    """
+    View for the select activity page of the application.
+    
+    This view retrieves all activities from the database and renders the 
+    select activity page template located at 'activities/selectactivity.html'.
+    
+    Args:
+        request: The HTTP request object. This contains metadata about 
+                 the request and can be used to access session data, 
+                 user information, and other HTTP-related information.
+    
+    Returns:
+        HttpResponse: Rendered select activity page template containing 
+                      a list of available activities.
+    """
+    activities = Activity.objects.all()
+    return render(request, 'activities/selectactivity.html' , {'activities': activities})

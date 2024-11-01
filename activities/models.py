@@ -72,3 +72,24 @@ class Child(models.Model):
             str: The full name of the child.
         """
         return self.name
+
+class Activity(models.Model):
+    """
+    Represents an educational activity designed for children.
+
+    Attributes:
+        activity_name (CharField): The name of the activity (e.g., "Touch the Correct Body Part").
+        instruction (TextField): A detailed description of the steps involved in the activity.
+    """
+    
+    activity_name = models.CharField(max_length=255)
+    instruction = models.TextField()
+
+    def __str__(self):
+        """
+        Returns the string representation of the Activity object, which is the activity's name.
+
+        Returns:
+            str: The name of the activity.
+        """
+        return self.activity_name
