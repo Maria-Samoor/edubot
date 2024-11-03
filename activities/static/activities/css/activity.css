@@ -1,0 +1,38 @@
+.activity-box {
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(36, 46, 96, 0.5);
+}
+
+h1.title {
+    margin-bottom: 1rem;
+    color: #242e60;
+}
+
+.subtitle {
+    margin-top: 1.5rem;
+    font-weight: bold;
+    color: #242e60;
+}
+
+.instructions {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-weight:500;
+}
+
+.time-counter {
+    font-size: 2rem;
+    color: #ed451d;
+    font-weight: bold;
+}
+
+.stop-button {
+    background-color: #242e60;
+    color: #fff;
+    margin-top: 1rem;
+}
+
+.stop-button:hover {
+    color: #fff; 
+}
+

@@ -1,0 +1,39 @@
+{% extends 'activities/base.html' %}
+{% load static %}
+
+{% block title %}Activity Report{% endblock %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" />
+<link rel="stylesheet" href="{% static 'activities/css/report.css' %}">
+
+<section class="container">
+    <div class="box activity-box">
+        <h1 class="title">Activity Report for {{ child.full_name }}</h1>
+        <table class="table is-striped is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Activity Name</th>
+                    <th>Correct Answers</th>
+                    <th>Incorrect Answers</th>
+                    <th>Average Time (s)</th>
+                    <th>Score (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in performance_records %}
+                <tr>
+                    <td>{{ record.activity.activity_name }}</td>
+                    <td>{{ record.correct_answers }}</td>
+                    <td>{{ record.incorrect_answers }}</td>
+                    <td>{{ record.average_time }}</td>
+                    <td>{{ record.score|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}

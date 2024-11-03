@@ -16,17 +16,12 @@
   <div class="card-content">
     <div class="content">
       <strong>● Age:</strong> {{ child.age }} years old<br />
-      <strong>● Gender:</strong> {{ child.get_gender_display }}<br /> <!-- Render gender -->
-      <strong>● Learning Difficulty:</strong> 
-      {% if child.learning_difficulty %}
-          {{ child.learning_difficulty }}
-      {% else %}
-          None
-      {% endif %}
+      <strong>● Gender:</strong> {{ child.age }}<br /> <!-- Render gender -->
+      <strong>● Learning Difficulty:</strong> {{ child.learning_difficulty }}
     </div>
   </div>
   <footer class="card-footer" style="background-color: #242e60;">
-    <a href="{% url 'selectactivity' %}" class="card-footer-item" style="color: #fcfdff;"><strong>Select</strong></a>
+    <a href="{% url 'selectactivity' child.id %}" class="card-footer-item" style="color: #fcfdff;"><strong>Select</strong></a>
     <!-- Delete Form -->
     <form method="POST" action="{% url 'delete_child' child.id %}" style="display:inline;">
       {% csrf_token %}

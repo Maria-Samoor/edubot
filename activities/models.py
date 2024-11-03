@@ -93,3 +93,73 @@ class Activity(models.Model):
             str: The name of the activity.
         """
         return self.activity_name
+
+class ChildActivity(models.Model):
+    """
+    A model representing a record of a child's performance in a specific educational activity.
+
+    This model tracks the number of correct and incorrect answers provided by the child, 
+    as well as the average time taken to complete the activity. Each child-activity 
+    combination is unique, enforced by the `unique_together` constraint, ensuring that 
+    each child has only one record per activity.
+
+    Attributes:
+        child (ForeignKey): A foreign key relationship to the `Child` model, representing 
+            the child participating in the activity.
+        activity (ForeignKey): A foreign key relationship to the `Activity` model, representing 
+            the specific activity being tracked.
+        correct_answers (IntegerField): The number of correct answers given by the child 
+            for the activity. Defaults to 0.
+        incorrect_answers (IntegerField): The number of incorrect answers given by the child 
+            for the activity. Defaults to 0.
+        average_time (FloatField): The average time taken by the child to complete the activity, 
+            measured in seconds. Defaults to 0.0.
+
+    Methods:
+        __str__(): Returns a string representation of the record, displaying the child's name 
+            and the activity name.
+    
+    Meta:
+        unique_together (tuple): Ensures that each child can have only one unique record per 
+            activity, preventing duplicate entries for the same child-activity pair.
+    """
+    
+    child = models.ForeignKey(Child, on_delete=models.CASCADE)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    correct_answers = models.IntegerField(default=0)
+    incorrect_answers = models.IntegerField(default=0)
+    average_time = models.FloatField(default=0.0)
+
+    @property
+    def score(self):
+        """
+        Calculates the score for the child based on their correct and incorrect answers.
+
+        The score can be calculated as a percentage of correct answers.
+
+        Returns:
+            float: The calculated score for the child in the activity. 
+                    Returns 0 if there are no attempts.
+        """
+        if self.correct_answers + self.incorrect_answers > 0:
+            return (self.correct_answers / (self.correct_answers + self.incorrect_answers)) * 100
+        return 0.0
+
+    def __str__(self):
+        """
+        Returns a string representation of the ChildActivity object, 
+        displaying the child's name and the activity name.
+
+        Returns:
+            str: A string in the format "Child Name - Activity Name".
+        """
+        return f"{self.child.name} - {self.activity.activity_name}"
+
+    class Meta:
+        """
+        Metadata for the ChildActivity model.
+
+        unique_together (tuple): Ensures that each child can have only one unique record per 
+            activity, preventing duplicate entries for the same child-activity pair.
+        """
+        unique_together = ('child', 'activity')

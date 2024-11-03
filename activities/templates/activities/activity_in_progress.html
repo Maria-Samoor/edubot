@@ -1,0 +1,27 @@
+{% extends 'activities/base.html' %}
+{% load static %}
+
+{% block title %}Activity in Progress{% endblock %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" />
+<link rel="stylesheet" href="{% static 'activities/css/activity.css' %}">
+<script src="{% static 'activities/js/activity.js' %}"></script>
+
+<section class="container">
+    <div class="box activity-box">
+        <h1 class="title">{{ activity.activity_name }}</h1>
+        <h2 class="subtitle" style="margin-top: 3rem;">Instructions:</h2>
+        <h4 class="instructions" >{{ activity.instruction|linebreaks }}</h4>
+
+        <h3 class="subtitle">Elapsed Time:</h3>
+        <div id="timer" class="time-counter">00:00</div>
+
+        <!-- Pass the URL for stopping the activity as a data attribute -->
+        <button class="button stop-button" data-stop-url="{% url 'stop_activity' child.id activity.id %}" onclick="stopActivity(this)">
+            Stop Activity
+        </button>
+    </div>
+</section>
+{% endblock %}

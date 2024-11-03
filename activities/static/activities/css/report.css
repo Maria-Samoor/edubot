@@ -1,0 +1,10 @@
+.activity-box {
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(36, 46, 96, 0.5);
+}
+
+.table th {
+    /* background-color: #242e60; */
+    color: #242e60;
+}
+

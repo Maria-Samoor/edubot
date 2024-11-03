@@ -36,7 +36,9 @@
     <div class="modal-content">
         <div class="box">
             <p>{{ activity.instruction|linebreaks }}</p> <!-- Display instructions with line breaks -->
-            <button class="button is-link" style = " margin-top: 1rem;">Start Activity</button>
+            <!-- <button class="button is-link" style = " margin-top: 1rem;">Start Activity</button> -->
+            <a href="{% url 'start_activity' child.id activity.id %}" class="button is-link" style="margin-top: 1rem;">Start Activity</a>
+
         </div>
     </div>
     <button class="modal-close is-large" aria-label="close" onclick="closeModal('modal-{{ forloop.counter }}')"></button>
