@@ -103,6 +103,20 @@ def select_activity(request, child_id):
 
 @login_required
 def start_activity(request, child_id, activity_id):
+    """
+    Start an activity for a specific child by publishing a start command to the MQTT broker.
+
+    This view connects to the MQTT broker, publishes a start command for the selected activity,
+    and renders the activity_in_progress.html template, displaying the selected child and activity.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        child_id (int): The ID of the child for whom the activity is being started.
+        activity_id (int): The ID of the activity being started.
+
+    Returns:
+        HttpResponse: Renders the 'activity_in_progress.html' template with the selected activity and child.
+    """
     child = get_object_or_404(Child, id=child_id)
     activity = get_object_or_404(Activity, id=activity_id)
 
@@ -118,6 +132,22 @@ def start_activity(request, child_id, activity_id):
 
 @login_required
 def stop_activity(request, child_id, activity_id):
+    """
+    Stop an activity for a specific child and retrieve performance data from the MQTT broker.
+
+    This view connects to the MQTT broker, subscribes to the performance topic for the selected activity,
+    publishes a stop signal, and waits for performance data (correct/incorrect answers and average time).
+    If performance data is received within the timeout period, it updates or creates a record for the 
+    child's activity performance.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        child_id (int): The ID of the child whose activity is being stopped.
+        activity_id (int): The ID of the activity being stopped.
+
+    Returns:
+        HttpResponse: Redirects to the 'activity_report' view with the updated child activity data.
+    """
     mqtt_client = MQTTClient()
     mqtt_client.connect()
 
