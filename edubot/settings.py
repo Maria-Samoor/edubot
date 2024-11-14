@@ -91,12 +91,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Specifies the b
 EMAIL_HOST = 'smtp.gmail.com'  # Gmail SMTP server for sending emails
 EMAIL_FROM = 'edubotteam@gmail.com'  # Email address used as the "from" address
 EMAIL_HOST_USER = 'edubotteam@gmail.com'  # Email account username (same as the from email)
-EMAIL_HOST_PASSWORD = 'nwrx eaeo kwkt nmvy'  # App-specific password for the Gmail account
+EMAIL_HOST_PASSWORD = ''  # App-specific password for the Gmail account
 EMAIL_PORT = 587  # Port used by Gmail's SMTP server (587 for TLS)
 EMAIL_USE_TLS = True  # Enables TLS for secure email transmission
 
-RECAPTCHA_PUBLIC_KEY = '6LfLkw4pAAAAAM0gMFJg5sIpH3NXxDZAqhfMgPhv' # Public key for Google reCAPTCHA integration, used in forms to prevent spam.
-RECAPTCHA_PRIVATE_KEY = '6LfLkw4pAAAAAHj3pxlxuRgMwxn1wKeW_q72WsIq' # Private key for Google reCAPTCHA integration, used for server-side verification.
+RECAPTCHA_PUBLIC_KEY = '' # Public key for Google reCAPTCHA integration, used in forms to prevent spam.
+RECAPTCHA_PRIVATE_KEY = '' # Private key for Google reCAPTCHA integration, used for server-side verification.
 SILENCED_SYSTEM_CHECKS = ['captcha.recaptcha_test_key_error']# Silence specific system checks related to reCAPTCHA test keys in the project.
 
 # Configuration for the Django Axes package, which handles login attempt monitoring.

@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
 from .models import Child, Activity, ChildActivity
 from .forms import ChildForm
-from .socket_communication import SocketCommunication
+from .mqtt_communication import MQTTClient
+import time
 
-# Create your views here.
 @login_required
 def home(request):
     """
@@ -103,69 +103,52 @@ def select_activity(request, child_id):
 
 @login_required
 def start_activity(request, child_id, activity_id):
-    """
-    Starts an activity for a specific child by sending the activity ID to 
-    Choregraphe via socket communication.
-
-    Args:
-        request (HttpRequest): The request object.
-        child_id (int): The ID of the child.
-        activity_id (int): The ID of the activity to start.
-
-    Returns:
-        HttpResponse: Renders the activity started page with the selected 
-                       activity and child details.
-    """
     child = get_object_or_404(Child, id=child_id)
     activity = get_object_or_404(Activity, id=activity_id)
 
-    socket_communication = SocketCommunication()
-    socket_communication.bind_server()
+    # Initialize MQTT client and connect
+    mqtt_client = MQTTClient()
+    mqtt_client.connect()
 
-    socket_communication.send_int(int(activity_id))
-    socket_communication.connect_client()
+    # Publish start command for the activity
+    start_topic = f"activity/start/{activity_id}"
+    mqtt_client.publish(start_topic, activity_id)
 
     return render(request, 'activities/activity_in_progress.html', {'activity': activity, 'child': child})
 
 @login_required
 def stop_activity(request, child_id, activity_id):
-    """
-    Stops an ongoing activity for a specific child by sending a stop signal 
-    to Choregraphe via socket communication, and receives performance data 
-    to update or create a ChildActivity record.
+    mqtt_client = MQTTClient()
+    mqtt_client.connect()
 
-    Args:
-        request (HttpRequest): The request object.
-        child_id (int): The ID of the child.
-        activity_id (int): The ID of the activity to stop.
+    # Publish stop signal to specific activity's stop topic
+    stop_topic = f"activity/stop/{activity_id}"
+    performance_topic = f"activity/performance/{activity_id}"
+    mqtt_client.subscribe(performance_topic)
+    mqtt_client.publish(stop_topic, "0")  # Sending "0" to indicate stop
 
-    Returns:
-        HttpResponse: Redirects to the activity report for the selected child.
-    """
-    # Create a SocketCommunication instance
-    socket_communication = SocketCommunication()
-    socket_communication.connect_client()
+    # Wait for performance data
+    timeout = time.time() + 10  # 10-second timeout
+    while not mqtt_client.performance_data_received and time.time() < timeout:
+        time.sleep(0.1)
 
-    # Send stop signal (0)
-    socket_communication.send_int(0)
-
-    # Receive performance data
-    wrong_answers = socket_communication.receive_int()
-    right_answers = socket_communication.receive_int()
-    avg_time =0.0
-    if wrong_answers is not None and right_answers is not None:
-    # Update or create ChildActivity record
+    # Update or create ChildActivity record if data was received
+    if mqtt_client.performance_data_received:
+        
         child_activity, created = ChildActivity.objects.update_or_create(
-        child_id=child_id,
-        activity_id=activity_id,
-        defaults={
-            'correct_answers': right_answers,
-            'incorrect_answers': wrong_answers,
-            'average_time': avg_time if avg_time is not None else 0,
-        },
+            child_id=child_id,
+            activity_id=activity_id,
+            defaults={
+                'correct_answers': mqtt_client.correct_answers,
+                'incorrect_answers': mqtt_client.incorrect_answers,
+                'average_time': mqtt_client.average_time,
+            },
         )
 
-    socket_communication.disconnect()  # Close the socket connection
+        # Reset performance data and unsubscribe from topic
+        mqtt_client.reset_performance_data()
+        mqtt_client.unsubscribe(performance_topic)
+        print(f"Updated ChildActivity for child {child_id} and activity {activity_id}.")
 
     return redirect('activity_report', child_id=child_id)
 
