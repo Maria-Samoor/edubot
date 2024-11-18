@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-import ssl
+import json 
 
 # MQTT Configuration
 MQTT_BROKER ="" # Define the IP address of the MQTT broker to connect to.
@@ -26,9 +26,7 @@ class MQTTClient:
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.performance_data_received = False
-        self.correct_answers = 0
-        self.incorrect_answers = 0
-        self.average_time = 0.0
+        self.performance_data = {}
 
     def connect(self):
         """Connect to the MQTT broker and start the client loop.
@@ -69,12 +67,16 @@ class MQTTClient:
         Updates `correct_answers`, `incorrect_answers`, and `average_time` if
         performance data is received, and sets `performance_data_received` to True.
         """
+        print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
         if msg.topic.startswith("activity/performance/"):
-            data = msg.payload.decode().split(',')
-            self.correct_answers, self.incorrect_answers = map(int, data[:2])
-            self.average_time = float(data[2])
-            self.performance_data_received = True
-            print(f"Performance data received: {self.correct_answers}, {self.incorrect_answers}, {self.average_time}")
+            try:
+                # Decode and parse JSON performance data
+                data = json.loads(msg.payload.decode())
+                self.performance_data = data
+                self.performance_data_received = True
+                print(f"Performance data received: {self.performance_data}")
+            except json.JSONDecodeError:
+                print("Failed to parse JSON payload")
 
     def publish(self, topic, payload):
         """Publish a message to a specified topic.
@@ -102,12 +104,6 @@ class MQTTClient:
         self.client.unsubscribe(topic)
 
     def reset_performance_data(self):
-        """Reset performance data flags and values.
-
-        Resets `performance_data_received` to False, and sets `correct_answers`,
-        `incorrect_answers`, and `average_time` to their initial values.
-        """
+        """Reset performance data flags and values."""
         self.performance_data_received = False
-        self.correct_answers = 0
-        self.incorrect_answers = 0
-        self.average_time = 0.0
+        self.performance_data = {}

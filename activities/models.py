@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import date
+from datetime import date, timedelta
 
 class Child(models.Model):
     """
@@ -64,6 +64,7 @@ class Child(models.Model):
         if (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day):
             age -= 1
         return age
+    
     def __str__(self):
         """
         Returns the string representation of the child, which is their full name.
@@ -112,10 +113,15 @@ class ChildActivity(models.Model):
             for the activity. Defaults to 0.
         incorrect_answers (IntegerField): The number of incorrect answers given by the child 
             for the activity. Defaults to 0.
-        average_time (FloatField): The average time taken by the child to complete the activity, 
-            measured in seconds. Defaults to 0.0.
+        start_activity (DateTimeField): The timestamp when the activity starts.
+        stop_activity (DateTimeField): The timestamp when the activity ends.
 
     Methods:
+        duration (property): A property that calculates the duration of the activity from the 
+            start and stop timestamps.
+        calculate_totals(): Calculates the total correct and incorrect answers from various stats.
+        score (property): Returns the child's score for the activity based on the number of 
+            correct and incorrect answers.
         __str__(): Returns a string representation of the record, displaying the child's name 
             and the activity name.
     
@@ -126,9 +132,183 @@ class ChildActivity(models.Model):
     
     child = models.ForeignKey(Child, on_delete=models.CASCADE)
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
-    correct_answers = models.IntegerField(default=0)
-    incorrect_answers = models.IntegerField(default=0)
-    average_time = models.FloatField(default=0.0)
+    total_right_answers = models.IntegerField(default=0)
+    total_wrong_answers = models.IntegerField(default=0)
+    start_activity = models.DateTimeField(null=True, blank=True)
+    stop_activity = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        """
+        Metadata for the ChildActivity model.
+
+        unique_together (tuple): Ensures that each child can have only one unique record per 
+            activity, preventing duplicate entries for the same child-activity pair.
+        """
+        unique_together = ('child', 'activity')
+
+    def calculate_totals(self):
+        """
+        Calculates the total correct and incorrect answers based on the specific activity type.
+
+        Depending on the activity, it queries relevant stats models like TouchBodyPartStats, 
+        MatchColorStats, etc., to aggregate the data.
+        """
+        if self.activity.activity_name == "Touch Correct Body Part":
+            stats = TouchBodyPartStats.objects.filter(child_activity=self)
+        elif self.activity.activity_name == "Match the Color":
+            stats = MatchColorStats.objects.filter(child_activity=self)
+        elif self.activity.activity_name == "Finger Counting Game":
+            stats = FindNumberStats.objects.filter(child_activity=self)
+        elif self.activity.activity_name == "Find the Different Image":
+            stats = FindImageStats.objects.filter(child_activity=self)
+        elif self.activity.activity_name == "Learning with Buttons":
+            stats = LearnWithButtonsStats.objects.filter(child_activity=self)
+        else:
+            return
+
+        self.total_right_answers = sum(stat.right_answers for stat in stats)
+        self.total_wrong_answers = sum(stat.wrong_answers for stat in stats)
+        self.save()
+
+    @property
+    def duration(self):
+        """
+        Calculates the duration between the start and stop activity times.
+
+        Returns:
+            timedelta: The difference between stop_activity and start_activity.
+        """
+        if self.start_activity and self.stop_activity:
+            return self.stop_activity - self.start_activity
+        return timedelta(0)
+    
+    @property
+    def score(self):
+        """
+        Calculates the score for the child based on their correct and incorrect answers.
+
+        The score can be calculated as a percentage of correct answers.
+
+        Returns:
+            float: The calculated score for the child in the activity. 
+                    Returns 0 if there are no attempts.
+        """
+        if self.total_right_answers + self.total_wrong_answers > 0:
+            return (self.total_right_answers / (self.total_wrong_answers + self.total_wrong_answers)) * 100
+        return 0.0
+
+    def __str__(self):
+        """
+        Returns a string representation of the ChildActivity object, 
+        displaying the child's name and the activity name.
+
+        Returns:
+            str: A string in the format "Child Name - Activity Name".
+        """
+        return f"{self.child.name} - {self.activity.activity_name}"
+    
+class TouchBodyPartStats(models.Model):
+    """
+    Model to store statistics about the child’s interaction with different body parts (e.g., left hand, right hand, etc.)
+    during an activity.
+
+    Attributes:
+        child_activity (ForeignKey): A reference to the `ChildActivity` model to link the stats to a specific activity.
+        body_part (CharField): The body part being interacted with during the activity (e.g., 'left_hand', 'right_hand').
+        right_answers (IntegerField): The number of correct answers provided by the child.
+        wrong_answers (IntegerField): The number of incorrect answers provided by the child.
+    
+    Methods:
+        score: Calculates the score as a percentage of correct answers out of the total attempts.
+    """
+    BODY_PART_CHOICES = [
+        ('left_hand', 'Left Hand'),
+        ('right_hand', 'Right Hand'),
+        ('left_bumper', 'Left Bumper'),
+        ('right_bumper', 'Right Bumper'),
+    ]
+    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    body_part = models.CharField(max_length=20, choices=BODY_PART_CHOICES)
+    right_answers = models.IntegerField(default=0)
+    wrong_answers = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('child_activity', 'body_part')
+    
+    @property
+    def score(self):
+        """
+        Calculates the score for the child based on their correct and incorrect answers.
+
+        The score can be calculated as a percentage of correct answers.
+
+        Returns:
+            float: The calculated score for the child in the activity. 
+                    Returns 0 if there are no attempts.
+        """
+        if self.right_answers + self.wrong_answers > 0:
+            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+        return 0.0
+    
+class MatchColorStats(models.Model):
+    """
+    Model to store statistics about the child's interaction with color-matching activities.
+
+    Attributes:
+        child_activity (ForeignKey): A reference to the `ChildActivity` model to link the stats to a specific activity.
+        color (CharField): The color the child interacted with (e.g., 'red', 'green').
+        right_answers (IntegerField): The number of correct answers provided by the child.
+        wrong_answers (IntegerField): The number of incorrect answers provided by the child.
+
+    Methods:
+        score: Calculates the score as a percentage of correct answers out of the total attempts.
+    """
+    COLOR_CHOICES = [
+        ('red', 'Red'),
+        ('yellow', 'Yellow'),
+        ('green', 'Green'),
+        ('blue', 'Blue'),
+    ]
+    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES)
+    right_answers = models.IntegerField(default=0)
+    wrong_answers = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('child_activity', 'color')
+    
+    @property
+    def score(self):
+        """
+        Calculates the score for the child based on their correct and incorrect answers.
+
+        The score can be calculated as a percentage of correct answers.
+
+        Returns:
+            float: The calculated score for the child in the activity. 
+                    Returns 0 if there are no attempts.
+        """
+        if self.right_answers + self.wrong_answers > 0:
+            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+        return 0.0
+    
+class FindNumberStats(models.Model):
+    """
+    Model to store statistics about the child's interaction with number recognition activities.
+
+    Attributes:
+        child_activity (ForeignKey): A reference to the `ChildActivity` model to link the stats to a specific activity.
+        number (IntegerField): The number the child interacted with during the activity.
+        right_answers (IntegerField): The number of correct answers provided by the child.
+        wrong_answers (IntegerField): The number of incorrect answers provided by the child.
+
+    Methods:
+        score: Calculates the score as a percentage of correct answers out of the total attempts.
+    """
+    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    number = models.IntegerField()
+    right_answers = models.IntegerField(default=0)
+    wrong_answers = models.IntegerField(default=0)
 
     @property
     def score(self):
@@ -141,25 +321,91 @@ class ChildActivity(models.Model):
             float: The calculated score for the child in the activity. 
                     Returns 0 if there are no attempts.
         """
-        if self.correct_answers + self.incorrect_answers > 0:
-            return (self.correct_answers / (self.correct_answers + self.incorrect_answers)) * 100
+        if self.right_answers + self.wrong_answers > 0:
+            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
         return 0.0
+    
+    class Meta:
+        unique_together = ('child_activity', 'number')
 
-    def __str__(self):
-        """
-        Returns a string representation of the ChildActivity object, 
-        displaying the child's name and the activity name.
+class FindImageStats(models.Model):
+    """
+    Model to store statistics about the child's interaction with image recognition activities.
 
-        Returns:
-            str: A string in the format "Child Name - Activity Name".
-        """
-        return f"{self.child.name} - {self.activity.activity_name}"
+    Attributes:
+        child_activity (ForeignKey): A reference to the `ChildActivity` model to link the stats to a specific activity.
+        image_type (CharField): The type of image the child interacted with (e.g., 'vegetable', 'fruit').
+        right_answers (IntegerField): The number of correct answers provided by the child.
+        wrong_answers (IntegerField): The number of incorrect answers provided by the child.
+
+    Methods:
+        score: Calculates the score as a percentage of correct answers out of the total attempts.
+    """
+    IMAGE_CHOICES = [
+        ('vegetable', 'Vegetable'),
+        ('fruit', 'Fruit'),
+        ('animal', 'Animal'),
+    ]
+    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    image_type = models.CharField(max_length=20, choices=IMAGE_CHOICES)
+    right_answers = models.IntegerField(default=0)
+    wrong_answers = models.IntegerField(default=0)
 
     class Meta:
-        """
-        Metadata for the ChildActivity model.
+        unique_together = ('child_activity', 'image_type')  # Ensures one record per child_activity and image_type
 
-        unique_together (tuple): Ensures that each child can have only one unique record per 
-            activity, preventing duplicate entries for the same child-activity pair.
+    @property
+    def score(self):
         """
-        unique_together = ('child', 'activity')
+        Calculates the score for the child based on their correct and incorrect answers.
+
+        The score can be calculated as a percentage of correct answers.
+
+        Returns:
+            float: The calculated score for the child in the activity. 
+                    Returns 0 if there are no attempts.
+        """
+        if self.right_answers + self.wrong_answers > 0:
+            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+        return 0.0
+
+class LearnWithButtonsStats(models.Model):
+    """
+    Model to store statistics about the child's interaction with button press activities.
+
+    Attributes:
+        child_activity (ForeignKey): A reference to the `ChildActivity` model to link the stats to a specific activity.
+        button (CharField): The button the child interacted with (e.g., 'horse', 'cat').
+        right_answers (IntegerField): The number of correct answers provided by the child.
+        wrong_answers (IntegerField): The number of incorrect answers provided by the child.
+
+    Methods:
+        score: Calculates the score as a percentage of correct answers out of the total attempts.
+    """
+    BUTTON_CHOICES = [
+        ('horse', 'Horse'),
+        ('cat', 'Cat'),
+        ('dog', 'Dog'),
+    ]
+    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    button = models.CharField(max_length=20, choices=BUTTON_CHOICES)
+    right_answers = models.IntegerField(default=0)
+    wrong_answers = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('child_activity', 'button')
+    
+    @property
+    def score(self):
+        """
+        Calculates the score for the child based on their correct and incorrect answers.
+
+        The score can be calculated as a percentage of correct answers.
+
+        Returns:
+            float: The calculated score for the child in the activity. 
+                    Returns 0 if there are no attempts.
+        """
+        if self.right_answers + self.wrong_answers > 0:
+            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+        return 0.0

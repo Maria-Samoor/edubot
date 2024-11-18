@@ -2,10 +2,11 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
-from .models import Child, Activity, ChildActivity
+from .models import Child, Activity, ChildActivity, TouchBodyPartStats, MatchColorStats, FindImageStats
 from .forms import ChildForm
 from .mqtt_communication import MQTTClient
 import time
+from django.utils import timezone
 
 @login_required
 def home(request):
@@ -119,7 +120,14 @@ def start_activity(request, child_id, activity_id):
     """
     child = get_object_or_404(Child, id=child_id)
     activity = get_object_or_404(Activity, id=activity_id)
-
+    child_activity, created = ChildActivity.objects.get_or_create(
+        child=child,
+        activity=activity,
+        defaults={'start_activity': timezone.now()}
+    )
+    if not created:  # If the record already exists, update the start time
+        child_activity.start_activity = timezone.now()
+        child_activity.save()
     # Initialize MQTT client and connect
     mqtt_client = MQTTClient()
     mqtt_client.connect()
@@ -159,26 +167,68 @@ def stop_activity(request, child_id, activity_id):
 
     # Wait for performance data
     timeout = time.time() + 10  # 10-second timeout
-    while not mqtt_client.performance_data_received and time.time() < timeout:
+    performance_data = None
+
+    while time.time() < timeout:
+        if mqtt_client.performance_data_received:
+            performance_data = mqtt_client.performance_data
+            break
         time.sleep(0.1)
 
-    # Update or create ChildActivity record if data was received
-    if mqtt_client.performance_data_received:
-        
-        child_activity, created = ChildActivity.objects.update_or_create(
-            child_id=child_id,
-            activity_id=activity_id,
-            defaults={
-                'correct_answers': mqtt_client.correct_answers,
-                'incorrect_answers': mqtt_client.incorrect_answers,
-                'average_time': mqtt_client.average_time,
-            },
-        )
+    if not performance_data:
+        print(f"No performance data received for activity {activity_id}.")
+        return redirect('activity_report', child_id=child_id)
+    
+    # Retrieve or create the ChildActivity object
+    child_activity, created = ChildActivity.objects.get_or_create(
+        child_id=child_id,
+        activity_id=activity_id,
+    )
+    child_activity.stop_activity = timezone.now()
+    child_activity.total_right_answers = sum(performance_data['right_answers'].values())
+    child_activity.total_wrong_answers = sum(performance_data['wrong_answers'].values())
+    child_activity.save()
+
+    # Update or create TouchBodyPartStats records for each body part
+    if activity_id == 1:
+        # Handle Touch Body Part activity
+        for body_part, right_answers in performance_data['right_answers'].items():
+            wrong_answers = performance_data['wrong_answers'].get(body_part, 0)
+            TouchBodyPartStats.objects.update_or_create(
+                child_activity=child_activity,
+                body_part=body_part,
+                defaults={
+                    'right_answers': right_answers,
+                    'wrong_answers': wrong_answers,
+                },
+            )
+    elif activity_id == 2:
+        # Handle Match Color activity
+        for color, right_answers in performance_data['right_answers'].items():
+            wrong_answers = performance_data['wrong_answers'].get(color, 0)
+            MatchColorStats.objects.update_or_create(
+                child_activity=child_activity,
+                color=color,
+                defaults={
+                    'right_answers': right_answers,
+                    'wrong_answers': wrong_answers,
+                },
+            )
+    elif activity_id == 4: 
+        for image_type, right_answers in performance_data['right_answers'].items():
+            wrong_answers = performance_data['wrong_answers'].get(image_type, 0)
+            FindImageStats.objects.update_or_create(
+                child_activity=child_activity,
+                image_type=image_type,
+                defaults={
+                    'right_answers': right_answers,
+                    'wrong_answers': wrong_answers,
+                },
+            )
 
         # Reset performance data and unsubscribe from topic
-        mqtt_client.reset_performance_data()
-        mqtt_client.unsubscribe(performance_topic)
-        print(f"Updated ChildActivity for child {child_id} and activity {activity_id}.")
+    mqtt_client.reset_performance_data()
+    mqtt_client.unsubscribe(performance_topic)
 
     return redirect('activity_report', child_id=child_id)
 
@@ -196,8 +246,9 @@ def activity_report(request, child_id):
         HttpResponse: Renders the activity report page with performance data.
     """
     child = get_object_or_404(Child, id=child_id)
+    print("child: ", child)
     performance_records = ChildActivity.objects.filter(child=child).select_related('activity')
-
+    print("performance_records: ", performance_records)
     return render(request, 'activities/activity_report.html', {
         'child': child,
         'performance_records': performance_records,
