@@ -305,8 +305,20 @@ class FindNumberStats(models.Model):
     Methods:
         score: Calculates the score as a percentage of correct answers out of the total attempts.
     """
+    NUMBER_CHOICES = [
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5', '5'),
+        ('6', '6'),
+        ('7', '7'),
+        ('8', '8'),
+        ('9', '9'),
+        ('10', '10'),
+    ]
     child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
-    number = models.IntegerField()
+    number = models.CharField(max_length=20, choices=NUMBER_CHOICES)
     right_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
 

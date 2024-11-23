@@ -2,11 +2,12 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
-from .models import Child, Activity, ChildActivity, TouchBodyPartStats, MatchColorStats, FindImageStats
+from .models import Child, Activity, ChildActivity, TouchBodyPartStats, MatchColorStats, FindImageStats, FindNumberStats
 from .forms import ChildForm
 from .mqtt_communication import MQTTClient
 import time
 from django.utils import timezone
+from .mediapipe_functions import MediaPipeServer
 
 @login_required
 def home(request):
@@ -56,14 +57,10 @@ def delete_child(request, child_id):
     """
     child = get_object_or_404(Child, id=child_id)
     
-    if request.method == "POST":
-        # Delete the child from the database
-        child.delete()
-        # Redirect to the child list view or another appropriate view
-        return redirect('selectchild')
+    child.delete()
+    # Redirect to the child list view or another appropriate view
+    return redirect('selectchild')
     
-    # If not POST, render a confirmation page (optional)
-    return render(request, 'activities/selectchild.html', {'child': child})
 
 @login_required
 def add_child(request):
@@ -135,7 +132,9 @@ def start_activity(request, child_id, activity_id):
     # Publish start command for the activity
     start_topic = f"activity/start/{activity_id}"
     mqtt_client.publish(start_topic, activity_id)
-
+    if activity_id == 3 :
+        mediapipe_server = MediaPipeServer(mqtt_client)
+        mediapipe_server.start()
     return render(request, 'activities/activity_in_progress.html', {'activity': activity, 'child': child})
 
 @login_required
@@ -214,6 +213,18 @@ def stop_activity(request, child_id, activity_id):
                     'wrong_answers': wrong_answers,
                 },
             )
+    elif activity_id == 3: 
+        for number, right_answers in performance_data['right_answers'].items():
+            wrong_answers = performance_data['wrong_answers'].get(number, 0)
+            FindNumberStats.objects.update_or_create(
+                child_activity=child_activity,
+                number=number,
+                defaults={
+                    'right_answers': right_answers,
+                    'wrong_answers': wrong_answers,
+                },
+        )
+            
     elif activity_id == 4: 
         for image_type, right_answers in performance_data['right_answers'].items():
             wrong_answers = performance_data['wrong_answers'].get(image_type, 0)
@@ -226,11 +237,33 @@ def stop_activity(request, child_id, activity_id):
                 },
             )
 
-        # Reset performance data and unsubscribe from topic
+    # Reset performance data and unsubscribe from topic
     mqtt_client.reset_performance_data()
     mqtt_client.unsubscribe(performance_topic)
 
     return redirect('activity_report', child_id=child_id)
+
+@login_required
+def child_report(request, child_id):
+    """
+    Displays the report for a specific child, showing performance data
+    such as correct answers, incorrect answers, and time taken.
+
+    Args:
+        request (HttpRequest): The request object.
+        child_id (int): The ID of the child.
+
+    Returns:
+        HttpResponse: Renders the report page with performance data.
+    """
+    child = get_object_or_404(Child, id=child_id)
+    print("child: ", child)
+    performance_records = ChildActivity.objects.filter(child=child).select_related('activity')
+    print("performance_records: ", performance_records)
+    return render(request, 'activities/activity_report.html', {
+        'child': child,
+        'performance_records': performance_records,
+    })
 
 @login_required
 def activity_report(request, child_id):

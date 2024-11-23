@@ -16,20 +16,14 @@
   <div class="card-content">
     <div class="content">
       <strong>● Age:</strong> {{ child.age }} years old<br />
-      <strong>● Gender:</strong> {{ child.age }}<br /> <!-- Render gender -->
+      <strong>● Gender:</strong> {{ child.gender }}<br /> <!-- Render gender -->
       <strong>● Learning Difficulty:</strong> {{ child.learning_difficulty }}
     </div>
   </div>
   <footer class="card-footer" style="background-color: #242e60;">
     <a href="{% url 'selectactivity' child.id %}" class="card-footer-item" style="color: #fcfdff;"><strong>Select</strong></a>
-    <!-- Delete Form -->
-    <form method="POST" action="{% url 'delete_child' child.id %}" style="display:inline;">
-      {% csrf_token %}
-      
-      <button type="submit" class="card-footer-item" style="color: #fcfdff; width: 9rem;">
-          <strong style="color: #fcfdff;">Delete</strong>
-      </button>
-  </form>
+    <a href="{% url 'child_report' child.id %}" class="card-footer-item" style="color: #fcfdff; text-align: center;"><strong>Report</strong></a>
+    <a href="{% url 'delete_child' child.id %}" class="card-footer-item" style="color: #fcfdff;"><strong>Delete</strong></a>
   </footer>
 </div>
 {% empty %}
