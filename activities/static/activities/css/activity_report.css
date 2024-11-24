@@ -1,0 +1,35 @@
+.circular-chart {
+    display: block;
+    max-width: 100%;
+    max-height: 250px;
+}
+.circle-bg {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 3.8;
+}
+.circle {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    animation: progress 1s ease-out forwards;
+}
+.green {
+    stroke: #4caf50;
+}
+.red {
+    stroke: #f44336;
+}
+.circle-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: bold;
+}
+@keyframes progress {
+    0% {
+        stroke-dasharray: 0 100;
+    }
+}

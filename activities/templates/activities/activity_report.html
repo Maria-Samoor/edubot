@@ -1,39 +1,57 @@
-{% extends 'activities/base.html' %}
-{% load static %}
+{% extends 'activities/base.html' %}  <!-- Extend from the base template -->
+{% load static %}  <!-- Load static files -->
 
-{% block title %}Activity Report{% endblock %}
+{% block title %}Activity Report{% endblock %}  <!-- Define the title block -->
 
 {% block content %}
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" />
-<link rel="stylesheet" href="{% static 'activities/css/report.css' %}">
 
-<section class="container">
-    <div class="box activity-box">
-        <h1 class="title">Activity Report for {{ child.full_name }}</h1>
-        <table class="table is-striped is-fullwidth">
-            <thead>
-                <tr>
-                    <th>Activity Name</th>
-                    <th>Correct Answers</th>
-                    <th>Incorrect Answers</th>
-                    <th>Duration (s)</th>
-                    <th>Score (%)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in performance_records %}
-                <tr>
-                    <td>{{ record.activity.activity_name }}</td>
-                    <td>{{ record.total_right_answers }}</td>
-                    <td>{{ record.total_wrong_answers }}</td>
-                    <td>{{ record.duration.total_seconds|floatformat:2 }}</td>
-                    <td>{{ record.score|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+<link rel="stylesheet" href="{% static 'activities/css/activity_report.css' %}">
+<body>
+    <section class="section">
+        <div class="container">
+            <h2 class="title has-text-centered">{{ child_name }} </h2>
+            <h2 class="subtitle has-text-centered" style="font-weight: 500;">
+                {{ activity_name }} Activity
+            </h2>   
+            {% if attempts_by_choice %}
+                {% for choice, attempts in attempts_by_choice.items %}
+                <div class="columns is-multiline">
+                    <div class="column is-full">
+                        <h5 class="title is-5">{{ choice }}</h5>
+                    </div>
+                    {% for attempt in attempts %}
+                    <div class="column is-4">
+                        <div class="card has-shadow">
+                            <div class="card-content">
+                                <h6 class="title is-6 has-text-centered">At:- {{ attempt.timestamp }}</h6>
+                                <div class="score-circle" style="position: relative; width: 100px; height: 100px; margin: 20px auto;">
+                                    <svg viewBox="0 0 36 36" class="circular-chart {% if attempt.score >= 50 %}green{% else %}red{% endif %}">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="circle" stroke-dasharray="{{ attempt.score }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div class="circle-text"><strong>{{ attempt.score }}%</strong></div>
+                                </div>
+                                <p class="card-text has-text-centered" >
+                                    <strong>Right:</strong> {{ attempt.right_answers }} |
+                                    <strong>Wrong:</strong> {{ attempt.wrong_answers }} <br>
+                                    <strong>Level:</strong> {{ attempt.level }}  
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="notification is-info has-text-centered" style="background-color: #242e60; width:max-content;  position:absolute ; top: 250%; left: 50%; transform: translate(-50%, -50%);">
+                <p>
+                    <strong>{{ child_name }}</strong> has not made any attempts for the <strong>{{ activity_name }}</strong> activity yet.
+                </p>
+                <p>Encourage them to participate to track their progress!</p>
+            </div>
+        {% endif %}
+        </div>
+    </section>
+</body>
 {% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'activities/base.html' %}
+{% load static %}
+
+{% block title %}Child Report{% endblock %}
+
+{% block content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/bulma@1.0.2/css/bulma.min.css" />
+<link rel="stylesheet" href="{% static 'activities/css/report.css' %}">
+
+<section class="container">
+    <div class="box activity-box">
+        <h1 class="title"> {{ child.name }} Report</h1>
+        <table class="table is-striped is-fullwidth">
+            <thead>
+                <tr>
+                    <th  style="text-align: center;">Activity Name</th>
+                    <th  style="text-align: center;">Correct Answers</th>
+                    <th  style="text-align: center;">Incorrect Answers</th>
+                    <th  style="text-align: center;">Duration (m)</th>
+                    <th  style="text-align: center;">Score (%)</th>
+                    <th  style="text-align: center;">DetaiLed Report</th>
+                </tr>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in performance_records %}
+                <tr>
+                    <td>{{ record.activity.activity_name }}</td>
+                    <td>{{ record.total_right_answers }}</td>
+                    <td>{{ record.total_wrong_answers }}</td>
+                    <td>{{ record.duration}}</td>
+                    <td>{{ record.score|floatformat:2 }}</td>
+                    <td style="text-align: center;">
+                        <a href="{% url 'activity_report' child.id record.activity.id %}" class="button is-link is-small" style= " background-color: #242e60; border-color: #242e60;">
+                        Open Report
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}

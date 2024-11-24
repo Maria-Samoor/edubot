@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
-from .models import Child, Activity, ChildActivity, TouchBodyPartStats, MatchColorStats, FindImageStats, FindNumberStats
+from .models import Child, Activity, ChildActivity, TouchBodyPartStats, MatchColorStats, FindImageStats, FindNumberStats, LearnWithButtonsStats
 from .forms import ChildForm
 from .mqtt_communication import MQTTClient
 import time
@@ -176,7 +176,7 @@ def stop_activity(request, child_id, activity_id):
 
     if not performance_data:
         print(f"No performance data received for activity {activity_id}.")
-        return redirect('activity_report', child_id=child_id)
+        return redirect('activity_report', child_id=child_id, activity_id=activity_id)
     
     # Retrieve or create the ChildActivity object
     child_activity, created = ChildActivity.objects.get_or_create(
@@ -190,58 +190,48 @@ def stop_activity(request, child_id, activity_id):
 
     # Update or create TouchBodyPartStats records for each body part
     if activity_id == 1:
-        # Handle Touch Body Part activity
         for body_part, right_answers in performance_data['right_answers'].items():
             wrong_answers = performance_data['wrong_answers'].get(body_part, 0)
-            TouchBodyPartStats.objects.update_or_create(
+            TouchBodyPartStats.objects.create(
                 child_activity=child_activity,
                 body_part=body_part,
-                defaults={
-                    'right_answers': right_answers,
-                    'wrong_answers': wrong_answers,
-                },
+                right_answers=right_answers,
+                wrong_answers=wrong_answers,
             )
     elif activity_id == 2:
-        # Handle Match Color activity
         for color, right_answers in performance_data['right_answers'].items():
             wrong_answers = performance_data['wrong_answers'].get(color, 0)
-            MatchColorStats.objects.update_or_create(
+            MatchColorStats.objects.create(
                 child_activity=child_activity,
                 color=color,
-                defaults={
-                    'right_answers': right_answers,
-                    'wrong_answers': wrong_answers,
-                },
+                right_answers=right_answers,
+                wrong_answers=wrong_answers,
             )
     elif activity_id == 3: 
         for number, right_answers in performance_data['right_answers'].items():
             wrong_answers = performance_data['wrong_answers'].get(number, 0)
-            FindNumberStats.objects.update_or_create(
+            FindNumberStats.objects.create(
                 child_activity=child_activity,
                 number=number,
-                defaults={
-                    'right_answers': right_answers,
-                    'wrong_answers': wrong_answers,
-                },
+                right_answers=right_answers,
+                wrong_answers=wrong_answers,
         )
             
     elif activity_id == 4: 
         for image_type, right_answers in performance_data['right_answers'].items():
             wrong_answers = performance_data['wrong_answers'].get(image_type, 0)
-            FindImageStats.objects.update_or_create(
+            FindImageStats.objects.create(
                 child_activity=child_activity,
                 image_type=image_type,
-                defaults={
-                    'right_answers': right_answers,
-                    'wrong_answers': wrong_answers,
-                },
+                right_answers=right_answers,
+                wrong_answers=wrong_answers,
             )
 
     # Reset performance data and unsubscribe from topic
     mqtt_client.reset_performance_data()
     mqtt_client.unsubscribe(performance_topic)
 
-    return redirect('activity_report', child_id=child_id)
+    return redirect('activity_report', child_id=child_id, activity_id=activity_id)
 
 @login_required
 def child_report(request, child_id):
@@ -260,32 +250,82 @@ def child_report(request, child_id):
     print("child: ", child)
     performance_records = ChildActivity.objects.filter(child=child).select_related('activity')
     print("performance_records: ", performance_records)
-    return render(request, 'activities/activity_report.html', {
+    return render(request, 'activities/child_report.html', {
         'child': child,
         'performance_records': performance_records,
     })
 
 @login_required
-def activity_report(request, child_id):
+def activity_report(request, child_id,activity_id):
     """
-    Displays the activity report for a specific child, showing performance data
-    such as correct answers, incorrect answers, and average time taken.
-
-    Args:
-        request (HttpRequest): The request object.
-        child_id (int): The ID of the child.
-
-    Returns:
-        HttpResponse: Renders the activity report page with performance data.
+    Displays the activity report for a specific child and activity, showing all attempts
+    ordered from newest to oldest.
     """
+    # Retrieve the child and activity objects
     child = get_object_or_404(Child, id=child_id)
-    print("child: ", child)
-    performance_records = ChildActivity.objects.filter(child=child).select_related('activity')
-    print("performance_records: ", performance_records)
-    return render(request, 'activities/activity_report.html', {
-        'child': child,
-        'performance_records': performance_records,
-    })
+    activity = get_object_or_404(Activity, id=activity_id)
+
+    # Retrieve the ChildActivity instance for this child and activity
+    child_activity = get_object_or_404(ChildActivity, child=child, activity=activity)
+
+    # Determine the related stats based on the activity type
+    stats_model_mapping = {
+        "Touch Correct Body Part": TouchBodyPartStats,
+        "Match the Color": MatchColorStats,
+        "Finger Counting Game": FindNumberStats,
+        "Find the Different Image": FindImageStats,
+        "Learning with Buttons": LearnWithButtonsStats,
+    }
+
+    stats_model = stats_model_mapping.get(child_activity.activity.activity_name)
+    # if not stats_model:
+    #     return render(request, "error.html", {"message": "Invalid activity type"})
+
+    # Fetch all related stats for the activity
+    stats = stats_model.objects.filter(child_activity=child_activity)
+
+    # Extract unique choices (e.g., body parts, colors, etc.)
+    choices_field = {
+        TouchBodyPartStats: "body_part",
+        MatchColorStats: "color",
+        FindNumberStats: "number",
+        FindImageStats: "image_type",
+        LearnWithButtonsStats: "button",
+    }.get(stats_model)
+
+    # Prepare a dictionary for storing display names
+    display_name_mapping = {
+        "color": dict(MatchColorStats.COLOR_CHOICES),
+        "body_part": dict(TouchBodyPartStats.BODY_PART_CHOICES),
+        "number": dict(FindNumberStats.NUMBER_CHOICES),
+        "image_type": dict(FindImageStats.IMAGE_CHOICES),
+        "button": dict(LearnWithButtonsStats.BUTTON_CHOICES),
+
+    }
+    
+    # Retrieve distinct choices and map to display names
+    raw_choices = stats.values_list(choices_field, flat=True).distinct()
+    choices = [
+        display_name_mapping[choices_field].get(choice, choice)
+        for choice in raw_choices
+    ]
+
+    # Group attempts by choice with display names
+    grouped_attempts = {}
+    for raw_choice in raw_choices:
+        display_choice = display_name_mapping[choices_field].get(raw_choice, raw_choice)
+        grouped_attempts[display_choice] = stats.filter(**{choices_field: raw_choice}).order_by("attempt")
+
+    # Prepare context for the template
+    context = {
+        "child_name": child_activity.child.name,
+        "activity_name": child_activity.activity.activity_name,
+        "activity_id": child_activity.activity.id,
+        "choices": choices,
+        "attempts_by_choice": grouped_attempts,
+    }
+
+    return render(request, "activities/activity_report.html", context)
 
 @login_required
 def logout_view(request):

@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import date, timedelta
+from django.utils.timezone import now
 
 class Child(models.Model):
     """
@@ -179,7 +180,8 @@ class ChildActivity(models.Model):
             timedelta: The difference between stop_activity and start_activity.
         """
         if self.start_activity and self.stop_activity:
-            return self.stop_activity - self.start_activity
+            duration_in_seconds = (self.stop_activity - self.start_activity).total_seconds()
+            return round(duration_in_seconds / 60, 2)  # Convert to minutes and round to 2 decimal places
         return timedelta(0)
     
     @property
@@ -194,8 +196,19 @@ class ChildActivity(models.Model):
                     Returns 0 if there are no attempts.
         """
         if self.total_right_answers + self.total_wrong_answers > 0:
-            return (self.total_right_answers / (self.total_wrong_answers + self.total_wrong_answers)) * 100
+            return (self.total_right_answers / (self.total_right_answers + self.total_wrong_answers)) * 100
         return 0.0
+
+    @property
+    def level(self):
+        score = self.score
+        if score > 90:
+            return "Excellent"
+        elif 70 <= score <= 90:
+            return "Good"
+        elif 50 <= score < 70:
+            return "Average"
+        return "Needs Improvement"
 
     def __str__(self):
         """
@@ -206,8 +219,43 @@ class ChildActivity(models.Model):
             str: A string in the format "Child Name - Activity Name".
         """
         return f"{self.child.name} - {self.activity.activity_name}"
+
+class AttemptedModel(models.Model):
+    """Base model to manage attempts."""
+    attempt = models.PositiveIntegerField(default=1, editable=False)
+    timestamp = models.DateTimeField(default=now, editable=False)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Only increment on new objects
+            # Get the latest attempt number for this child_activity
+            last_attempt = self.__class__.objects.filter(
+                child_activity=self.child_activity
+            ).order_by('-attempt').first()
+
+            # Use the latest attempt number or start a new attempt group
+            self.attempt = last_attempt.attempt if last_attempt else 1
+            
+            # Check if this is the first object in a new attempt group
+            if self._is_new_attempt_group():
+                self.attempt += 1 
+            # Limit to the last 3 attempts (delete oldest if exceeding)
+            if last_attempt and self.attempt > 3:
+                oldest_attempt = self.__class__.objects.filter(
+                    child_activity=self.child_activity, attempt=self.attempt - 3
+                )
+                oldest_attempt.delete()
+        super().save(*args, **kwargs)
+    def _is_new_attempt_group(self):
+        """
+        Determines whether a new attempt group should be started.
+        Override this method in derived models if specific criteria apply.
+        """
+        return False  # Default behavior: continue the current attempt group
     
-class TouchBodyPartStats(models.Model):
+class TouchBodyPartStats(AttemptedModel):
     """
     Model to store statistics about the child’s interaction with different body parts (e.g., left hand, right hand, etc.)
     during an activity.
@@ -227,13 +275,24 @@ class TouchBodyPartStats(models.Model):
         ('left_bumper', 'Left Bumper'),
         ('right_bumper', 'Right Bumper'),
     ]
-    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    child_activity = models.ForeignKey(
+        ChildActivity,
+        on_delete=models.CASCADE,
+        related_name="touch_body_part_stats"
+        )
     body_part = models.CharField(max_length=20, choices=BODY_PART_CHOICES)
     right_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = ('child_activity', 'body_part')
+        unique_together = ('child_activity','attempt', 'body_part')
+    
+    def _is_new_attempt_group(self):
+        # Start a new attempt group if all body parts are already created for the latest attempt
+        return self.__class__.objects.filter(
+            child_activity=self.child_activity,
+            attempt=self.attempt
+        ).count() == len(self.BODY_PART_CHOICES)
     
     @property
     def score(self):
@@ -247,10 +306,21 @@ class TouchBodyPartStats(models.Model):
                     Returns 0 if there are no attempts.
         """
         if self.right_answers + self.wrong_answers > 0:
-            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+            return (self.right_answers / (self.right_answers + self.wrong_answers)) * 100
         return 0.0
     
-class MatchColorStats(models.Model):
+    @property
+    def level(self):
+        score = self.score
+        if score > 90:
+            return "Excellent"
+        elif 70 <= score <= 90:
+            return "Good"
+        elif 50 <= score < 70:
+            return "Average"
+        return "Needs Improvement"
+    
+class MatchColorStats(AttemptedModel):
     """
     Model to store statistics about the child's interaction with color-matching activities.
 
@@ -269,13 +339,24 @@ class MatchColorStats(models.Model):
         ('green', 'Green'),
         ('blue', 'Blue'),
     ]
-    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    child_activity = models.ForeignKey(
+        ChildActivity,
+        on_delete=models.CASCADE,
+        related_name="match_color_stats"
+        )    
     color = models.CharField(max_length=20, choices=COLOR_CHOICES)
     right_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
 
+    def _is_new_attempt_group(self):
+        # Start a new attempt group if all body parts are already created for the latest attempt
+        return self.__class__.objects.filter(
+            child_activity=self.child_activity,
+            attempt=self.attempt
+        ).count() == len(self.COLOR_CHOICES)
+
     class Meta:
-        unique_together = ('child_activity', 'color')
+        unique_together = ('child_activity','attempt', 'color')
     
     @property
     def score(self):
@@ -289,10 +370,21 @@ class MatchColorStats(models.Model):
                     Returns 0 if there are no attempts.
         """
         if self.right_answers + self.wrong_answers > 0:
-            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+            return (self.right_answers / (self.right_answers + self.wrong_answers)) * 100
         return 0.0
     
-class FindNumberStats(models.Model):
+    @property
+    def level(self):
+        score = self.score
+        if score > 90:
+            return "Excellent"
+        elif 70 <= score <= 90:
+            return "Good"
+        elif 50 <= score < 70:
+            return "Average"
+        return "Needs Improvement"
+    
+class FindNumberStats(AttemptedModel):
     """
     Model to store statistics about the child's interaction with number recognition activities.
 
@@ -317,11 +409,25 @@ class FindNumberStats(models.Model):
         ('9', '9'),
         ('10', '10'),
     ]
-    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    child_activity = models.ForeignKey(
+        ChildActivity,
+        on_delete=models.CASCADE,
+        related_name="find_number_stats"
+        )
     number = models.CharField(max_length=20, choices=NUMBER_CHOICES)
     right_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
 
+    class Meta:
+        unique_together = ('child_activity','attempt', 'number')
+
+    def _is_new_attempt_group(self):
+        # Start a new attempt group if all body parts are already created for the latest attempt
+        return self.__class__.objects.filter(
+            child_activity=self.child_activity,
+            attempt=self.attempt
+        ).count() == len(self.NUMBER_CHOICES)
+    
     @property
     def score(self):
         """
@@ -334,13 +440,21 @@ class FindNumberStats(models.Model):
                     Returns 0 if there are no attempts.
         """
         if self.right_answers + self.wrong_answers > 0:
-            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+            return (self.right_answers / (self.right_answers + self.wrong_answers)) * 100
         return 0.0
-    
-    class Meta:
-        unique_together = ('child_activity', 'number')
 
-class FindImageStats(models.Model):
+    @property
+    def level(self):
+        score = self.score
+        if score > 90:
+            return "Excellent"
+        elif 70 <= score <= 90:
+            return "Good"
+        elif 50 <= score < 70:
+            return "Average"
+        return "Needs Improvement"
+    
+class FindImageStats(AttemptedModel):
     """
     Model to store statistics about the child's interaction with image recognition activities.
 
@@ -358,14 +472,25 @@ class FindImageStats(models.Model):
         ('fruit', 'Fruit'),
         ('animal', 'Animal'),
     ]
-    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    child_activity = models.ForeignKey(
+        ChildActivity,
+        on_delete=models.CASCADE,
+        related_name="find_image_stats"
+        )
     image_type = models.CharField(max_length=20, choices=IMAGE_CHOICES)
     right_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = ('child_activity', 'image_type')  # Ensures one record per child_activity and image_type
+        unique_together = ('child_activity', 'attempt', 'image_type')  # Ensures one record per child_activity and image_type
 
+    def _is_new_attempt_group(self):
+        # Start a new attempt group if all body parts are already created for the latest attempt
+        return self.__class__.objects.filter(
+            child_activity=self.child_activity,
+            attempt=self.attempt
+        ).count() == len(self.IMAGE_CHOICES)
+    
     @property
     def score(self):
         """
@@ -378,10 +503,21 @@ class FindImageStats(models.Model):
                     Returns 0 if there are no attempts.
         """
         if self.right_answers + self.wrong_answers > 0:
-            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+            return (self.right_answers / (self.right_answers + self.wrong_answers)) * 100
         return 0.0
 
-class LearnWithButtonsStats(models.Model):
+    @property
+    def level(self):
+        score = self.score
+        if score > 90:
+            return "Excellent"
+        elif 70 <= score <= 90:
+            return "Good"
+        elif 50 <= score < 70:
+            return "Average"
+        return "Needs Improvement"
+
+class LearnWithButtonsStats(AttemptedModel):
     """
     Model to store statistics about the child's interaction with button press activities.
 
@@ -399,13 +535,24 @@ class LearnWithButtonsStats(models.Model):
         ('cat', 'Cat'),
         ('dog', 'Dog'),
     ]
-    child_activity = models.ForeignKey(ChildActivity, on_delete=models.CASCADE)
+    child_activity = models.ForeignKey(
+        ChildActivity,
+        on_delete=models.CASCADE, 
+        related_name="find_button_stats"
+        )
     button = models.CharField(max_length=20, choices=BUTTON_CHOICES)
     right_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = ('child_activity', 'button')
+        unique_together = ('child_activity','attempt', 'button')
+    
+    def _is_new_attempt_group(self):
+        # Start a new attempt group if all body parts are already created for the latest attempt
+        return self.__class__.objects.filter(
+            child_activity=self.child_activity,
+            attempt=self.attempt
+        ).count() == len(self.BUTTON_CHOICES)
     
     @property
     def score(self):
@@ -419,5 +566,16 @@ class LearnWithButtonsStats(models.Model):
                     Returns 0 if there are no attempts.
         """
         if self.right_answers + self.wrong_answers > 0:
-            return (self.right_answers / (self.wrong_answers + self.wrong_answers)) * 100
+            return (self.right_answers / (self.right_answers + self.wrong_answers)) * 100
         return 0.0
+    
+    @property
+    def level(self):
+        score = self.score
+        if score > 90:
+            return "Excellent"
+        elif 70 <= score <= 90:
+            return "Good"
+        elif 50 <= score < 70:
+            return "Average"
+        return "Needs Improvement"
