@@ -14,6 +14,7 @@ class MediaPipeServer:
         mp_hands (mp.solutions.hands): MediaPipe Hands solution for hand landmark detection.
         mp_drawing (mp.solutions.drawing_utils): MediaPipe drawing utility for visualizing hand landmarks.
     """
+
     def __init__(self, mqtt_client):
         """
         Initializes the MediaPipeServer with an MQTT client.
@@ -46,15 +47,31 @@ class MediaPipeServer:
         """Handle incoming MQTT messages."""
         if msg.topic == "mediapipe/image":
             try:
-                # Decode the image from the MQTT payload
-                np_img = np.frombuffer(msg.payload, dtype=np.uint8).reshape((240, 320, 3))
+                # Print payload size for debugging
+                print(f"Payload size: {len(msg.payload)}")
+
+                # Attempt to decode the image
+                np_img = np.frombuffer(msg.payload, dtype=np.uint8)
+
+                # Check if size matches the expected dimensions
+                expected_size = 240 * 320 * 3
+                if len(np_img) == expected_size:
+                    # Reshape if the size matches
+                    reshaped_img = np_img.reshape((240, 320, 3))
+                else:
+                    print(f"Unexpected image size: {len(np_img)}. Resizing...")
+                    # Assume the image is encoded (e.g., JPEG)
+                    reshaped_img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+                    reshaped_img = cv2.resize(reshaped_img, (320, 240))
+
                 print("Image received. Processing...")
-                self.process_image(np_img)
+                self.process_image(reshaped_img)
             except Exception as e:
                 print(f"Error processing image: {e}")
 
         elif msg.topic == "activity/stop/3":
             self.stop()
+
 
     def process_image(self, image):
         """
@@ -113,21 +130,24 @@ class MediaPipeServer:
         """
         try:
             # Resize image to 240x320 if needed
-            resized_image = cv2.resize(image, (320, 240))
+            resized_image = cv2.resize(image, (320, 240), interpolation=cv2.INTER_LINEAR)
 
             # Apply Gaussian blur to reduce noise
             blurred_image = cv2.GaussianBlur(resized_image, (5, 5), 0)
 
             # Adjust contrast
             enhanced_image = cv2.convertScaleAbs(blurred_image, alpha=1.2, beta=30)
-            
 
-            #enhance the resolution of image 
+            # Upscale image for better processing (optional)
+            high_res_image = cv2.resize(enhanced_image, (640, 480), interpolation=cv2.INTER_CUBIC)
 
-            # apply mediapipe 
+            # Further enhance edges for better hand landmark detection
+            enhanced_edges = cv2.Canny(high_res_image, threshold1=100, threshold2=200)
 
+            # Combine original high-resolution image with edges (for visualization/debugging)
+            final_preprocessed_image = cv2.addWeighted(high_res_image, 0.8, cv2.cvtColor(enhanced_edges, cv2.COLOR_GRAY2BGR), 0.2, 0)
 
-            return enhanced_image
+            return final_preprocessed_image
         except Exception as e:
             print(f"Error in preprocessing: {e}")
             return image  # Return original image in case of failure

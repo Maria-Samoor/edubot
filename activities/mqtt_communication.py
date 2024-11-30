@@ -2,8 +2,8 @@ import paho.mqtt.client as mqtt
 import json 
 
 # MQTT Configuration
-# MQTT_BROKER ="192.168.0.137" # Define the IP address of the MQTT broker to connect to.
-MQTT_BROKER ="localhost"
+MQTT_BROKER ="" # Define the IP address of the MQTT broker to connect to.
+# MQTT_BROKER ="localhost"
 MQTT_PORT = 1883
 
 class MQTTClient:
