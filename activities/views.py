@@ -7,7 +7,6 @@ from .forms import ChildForm
 from .mqtt_communication import MQTTClient
 import time
 from django.utils import timezone
-from .mediapipe_functions import MediaPipeServer
 
 @login_required
 def home(request):
@@ -132,9 +131,7 @@ def start_activity(request, child_id, activity_id):
     # Publish start command for the activity
     start_topic = f"activity/start/{activity_id}"
     mqtt_client.publish(start_topic, activity_id)
-    if activity_id == 3 :
-        mediapipe_server = MediaPipeServer(mqtt_client)
-        mediapipe_server.start()
+
     return render(request, 'activities/activity_in_progress.html', {'activity': activity, 'child': child})
 
 @login_required

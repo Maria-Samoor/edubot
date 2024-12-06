@@ -30,7 +30,7 @@
                                         <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                         <path class="circle" stroke-dasharray="{{ attempt.score }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                     </svg>
-                                    <div class="circle-text"><strong>{{ attempt.score }}%</strong></div>
+                                    <div class="circle-text"><strong>{{ attempt.score|floatformat:2 }}%</strong></div>
                                 </div>
                                 <p class="card-text has-text-centered" >
                                     <strong>Right:</strong> {{ attempt.right_answers }} |

@@ -3,7 +3,6 @@ import json
 
 # MQTT Configuration
 MQTT_BROKER ="" # Define the IP address of the MQTT broker to connect to.
-# MQTT_BROKER ="localhost"
 MQTT_PORT = 1883
 
 class MQTTClient:

@@ -1,6 +1,6 @@
 from django.db import models
 from datetime import date, timedelta
-from django.utils.timezone import now
+from django.utils.timezone import now, localtime
 
 class Child(models.Model):
     """
@@ -223,7 +223,7 @@ class ChildActivity(models.Model):
 class AttemptedModel(models.Model):
     """Base model to manage attempts."""
     attempt = models.PositiveIntegerField(default=1, editable=False)
-    timestamp = models.DateTimeField(default=now, editable=False)
+    timestamp = models.DateTimeField(default=lambda: localtime(now()), editable=False)
 
     class Meta:
         abstract = True
@@ -338,6 +338,7 @@ class MatchColorStats(AttemptedModel):
         ('yellow', 'Yellow'),
         ('green', 'Green'),
         ('blue', 'Blue'),
+        ('black', 'Black'),
     ]
     child_activity = models.ForeignKey(
         ChildActivity,
