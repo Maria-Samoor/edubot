@@ -1,4 +1,4 @@
-/* .activity-box {
+.activity-box {
     text-align: center;
     box-shadow: 0 4px 10px rgba(36, 46, 96, 0.5);
 }
@@ -35,66 +35,12 @@ h1.title {
 .stop-button:hover {
     color: #fff; 
 }
- */
 
- .activity-box {
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(36, 46, 96, 0.5);
-}
-
-h1.title {
-    margin-bottom: 1rem;
-    color: #242e60;
-}
-
-.subtitle {
-    margin-top: 1.5rem;
-    font-weight: bold;
-    color: #242e60;
-}
-
-.instructions {
-    margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
-    font-weight: 500;
-}
-
-.time-counter {
-    font-size: 2rem;
-    color: #ed451d;
-    font-weight: bold;
-}
-
-.stream-container {
-    margin-top: 2rem;
-}
-
-#camera-feed {
-    width: 300px;
-    height: 300px;
-    border: 2px solid #242e60;
-    border-radius: 10px;
-    margin: auto;
-}
-
-.button-container {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 1.5rem;
-}
-
-.stop-button {
-    background-color: #242e60;
-    color: #fff;
-}
-
-.publish-button {
-    background-color: #ed451d;
-    color: #fff;
-}
-
-.stop-button:hover,
-.publish-button:hover {
-    color: #fff;
+.activity-image {
+    max-width: 600px;
+    max-height: 600px;
+    width: auto; 
+    height: auto; 
+    display: block;
+    margin: 0 auto;
 }

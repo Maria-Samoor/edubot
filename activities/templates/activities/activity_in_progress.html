@@ -12,9 +12,19 @@
 <section class="container">
     <div class="box activity-box">
         <h1 class="title">{{ activity.activity_name }}</h1>
-        <h2 class="subtitle" style="margin-top: 3rem;">Instructions:</h2>
-        <h4 class="instructions" >{{ activity.instruction|linebreaks }}</h4>
-
+        <h2 class="subtitle" style="margin-top: 3rem;">Activity Procedure:</h2>
+        <!-- <h4 class="instructions" >{{ activity.instruction|linebreaks }}</h4> -->
+        {% if activity.id == 1 %}
+            <img src="{% static 'activities/images/touch_correct_pody_part.png' %}" alt="Touch Correct Body Part" class="activity-image">
+        {% elif activity.id == 2 %}
+            <img src="{% static 'activities/images/match_the_color.png' %}" alt="Match the Color" class="activity-image">
+        {% elif activity.id == 4 %}
+            <img src="{% static 'activities/images/find_the_different_image.png' %}" alt="Find the Different Image" class="activity-image">
+        {% elif activity.id == 5 %}
+            <img src="{% static 'activities/images/learning_with_buttons.png' %}" alt="Learning with Buttons" class="activity-image">
+        {% else %}
+            <h4 class="instructions">{{ activity.instruction|linebreaks }}</h4>
+        {% endif %}
         <h3 class="subtitle">Elapsed Time:</h3>
         <div id="timer" class="time-counter">00:00</div>
 
