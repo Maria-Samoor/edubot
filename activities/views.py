@@ -95,6 +95,14 @@ def select_activity(request, child_id):
                       a list of available activities.
     """
     child = get_object_or_404(Child, id=child_id)
+    mqtt_client = MQTTClient()
+    mqtt_client.connect()
+    start_topic = f"activity/start/6"
+    mqtt_client.publish(start_topic, "6")
+    
+    time.sleep(3)
+    first_name = child.name.split()[0] 
+    mqtt_client.publish("child/name", first_name)
     activities = Activity.objects.all()
     return render(request, 'activities/selectactivity.html' , {'activities': activities, 'child': child})
 
@@ -223,6 +231,15 @@ def stop_activity(request, child_id, activity_id):
                 right_answers=right_answers,
                 wrong_answers=wrong_answers,
             )
+    elif activity_id == 5: 
+        for button, right_answers in performance_data['right_answers'].items():
+            wrong_answers = performance_data['wrong_answers'].get(button, 0)
+            LearnWithButtonsStats.objects.create(
+                child_activity=child_activity,
+                button=button,
+                right_answers=right_answers,
+                wrong_answers=wrong_answers,
+            )
 
     # Reset performance data and unsubscribe from topic
     mqtt_client.reset_performance_data()
@@ -302,14 +319,15 @@ def activity_report(request, child_id,activity_id):
     
     # Retrieve distinct choices and map to display names
     raw_choices = stats.values_list(choices_field, flat=True).distinct()
+    sorted_choices = sorted(raw_choices, key=lambda x: int(x) if x.isdigit() else x)
     choices = [
         display_name_mapping[choices_field].get(choice, choice)
-        for choice in raw_choices
+        for choice in sorted_choices
     ]
 
     # Group attempts by choice with display names
     grouped_attempts = {}
-    for raw_choice in raw_choices:
+    for raw_choice in sorted_choices:
         display_choice = display_name_mapping[choices_field].get(raw_choice, raw_choice)
         grouped_attempts[display_choice] = stats.filter(**{choices_field: raw_choice}).order_by("attempt")
 

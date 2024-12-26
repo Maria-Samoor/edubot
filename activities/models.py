@@ -1,6 +1,6 @@
 from django.db import models
 from datetime import date, timedelta
-from django.utils.timezone import now, localtime
+from django.utils.timezone import now
 
 class Child(models.Model):
     """
@@ -223,7 +223,7 @@ class ChildActivity(models.Model):
 class AttemptedModel(models.Model):
     """Base model to manage attempts."""
     attempt = models.PositiveIntegerField(default=1, editable=False)
-    timestamp = models.DateTimeField(default=lambda: localtime(now()), editable=False)
+    timestamp = models.DateTimeField(default=now, editable=False)
 
     class Meta:
         abstract = True
@@ -469,9 +469,9 @@ class FindImageStats(AttemptedModel):
         score: Calculates the score as a percentage of correct answers out of the total attempts.
     """
     IMAGE_CHOICES = [
-        ('vegetable', 'Vegetable'),
-        ('fruit', 'Fruit'),
-        ('animal', 'Animal'),
+        ('fruits', 'Fruits'),
+        ('shapes', 'Shapes'),
+        ('vehicles', 'Vehicles'),
     ]
     child_activity = models.ForeignKey(
         ChildActivity,
