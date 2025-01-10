@@ -201,6 +201,18 @@ class ChildActivity(models.Model):
 
     @property
     def level(self):
+        """
+        Determines the performance level of the child based on their score.
+
+        If no attempts have been made (total_right_answers + total_wrong_answers = 0),
+        it returns 'No attempts have been made'.
+
+        Returns:
+            str: The performance level or a message indicating no attempts.
+        """
+        if self.total_right_answers + self.total_wrong_answers == 0:
+            return "No attempts have been made"
+
         score = self.score
         if score > 90:
             return "Excellent"
@@ -209,6 +221,7 @@ class ChildActivity(models.Model):
         elif 50 <= score < 70:
             return "Average"
         return "Needs Improvement"
+
 
     def __str__(self):
         """
@@ -311,6 +324,18 @@ class TouchBodyPartStats(AttemptedModel):
     
     @property
     def level(self):
+        """
+        Determines the performance level of the child based on their score.
+
+        If no attempts have been made (total_right_answers + total_wrong_answers = 0),
+        it returns 'No attempts have been made'.
+
+        Returns:
+            str: The performance level or a message indicating no attempts.
+        """
+        if self.right_answers + self.wrong_answers == 0:
+            return "No attempts have been made"
+
         score = self.score
         if score > 90:
             return "Excellent"
@@ -376,6 +401,18 @@ class MatchColorStats(AttemptedModel):
     
     @property
     def level(self):
+        """
+        Determines the performance level of the child based on their score.
+
+        If no attempts have been made (total_right_answers + total_wrong_answers = 0),
+        it returns 'No attempts have been made'.
+
+        Returns:
+            str: The performance level or a message indicating no attempts.
+        """
+        if self.right_answers + self.wrong_answers == 0:
+            return "No attempts have been made"
+
         score = self.score
         if score > 90:
             return "Excellent"
@@ -446,6 +483,18 @@ class FindNumberStats(AttemptedModel):
 
     @property
     def level(self):
+        """
+        Determines the performance level of the child based on their score.
+
+        If no attempts have been made (total_right_answers + total_wrong_answers = 0),
+        it returns 'No attempts have been made'.
+
+        Returns:
+            str: The performance level or a message indicating no attempts.
+        """
+        if self.right_answers + self.wrong_answers == 0:
+            return "No attempts have been made"
+
         score = self.score
         if score > 90:
             return "Excellent"
@@ -509,6 +558,18 @@ class FindImageStats(AttemptedModel):
 
     @property
     def level(self):
+        """
+        Determines the performance level of the child based on their score.
+
+        If no attempts have been made (total_right_answers + total_wrong_answers = 0),
+        it returns 'No attempts have been made'.
+
+        Returns:
+            str: The performance level or a message indicating no attempts.
+        """
+        if self.right_answers + self.wrong_answers == 0:
+            return "No attempts have been made"
+
         score = self.score
         if score > 90:
             return "Excellent"
@@ -572,6 +633,18 @@ class LearnWithButtonsStats(AttemptedModel):
     
     @property
     def level(self):
+        """
+        Determines the performance level of the child based on their score.
+
+        If no attempts have been made (total_right_answers + total_wrong_answers = 0),
+        it returns 'No attempts have been made'.
+
+        Returns:
+            str: The performance level or a message indicating no attempts.
+        """
+        if self.right_answers + self.wrong_answers == 0:
+            return "No attempts have been made"
+
         score = self.score
         if score > 90:
             return "Excellent"

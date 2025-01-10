@@ -81,30 +81,44 @@ def add_child(request):
 def select_activity(request, child_id):
     """
     View for the select activity page of the application.
-    
+
     This view retrieves all activities from the database and renders the 
     select activity page template located at 'activities/selectactivity.html'.
-    
+    It ensures that the MQTT client connects and publishes to the topic only
+    when the selected child ID changes or isn't consecutive.
+
     Args:
         request: The HTTP request object. This contains metadata about 
                  the request and can be used to access session data, 
                  user information, and other HTTP-related information.
-    
+        child_id: The ID of the selected child.
+
     Returns:
         HttpResponse: Rendered select activity page template containing 
-                      a list of available activities.
+                      a list of available activities and child details.
     """
     child = get_object_or_404(Child, id=child_id)
-    mqtt_client = MQTTClient()
-    mqtt_client.connect()
-    start_topic = f"activity/start/6"
-    mqtt_client.publish(start_topic, "6")
-    
-    time.sleep(3)
-    first_name = child.name.split()[0] 
-    mqtt_client.publish("child/name", first_name)
     activities = Activity.objects.all()
-    return render(request, 'activities/selectactivity.html' , {'activities': activities, 'child': child})
+
+    # Retrieve the last selected child ID from the session
+    last_child_id = request.session.get('last_selected_child_id')
+
+    # Check if the selected child ID is different from the last stored ID
+    if last_child_id != child_id:
+        mqtt_client = MQTTClient()
+        mqtt_client.connect()
+
+        start_topic = f"activity/start/6"
+        mqtt_client.publish(start_topic, "6")
+        
+        time.sleep(3)
+        first_name = child.name.split()[0]
+        mqtt_client.publish("child/name", first_name)
+
+        request.session['last_selected_child_id'] = child_id
+
+    return render(request, 'activities/selectactivity.html', {'activities': activities, 'child': child})
+
 
 @login_required
 def start_activity(request, child_id, activity_id):
@@ -333,6 +347,7 @@ def activity_report(request, child_id,activity_id):
 
     # Prepare context for the template
     context = {
+        "child_id": child_activity.child.id,
         "child_name": child_activity.child.name,
         "activity_name": child_activity.activity.activity_name,
         "activity_id": child_activity.activity.id,
