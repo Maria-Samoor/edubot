@@ -1,10 +1,11 @@
 import paho.mqtt.client as mqtt
 import json 
+import logging
 
+logger = logging.getLogger("activities")
 # MQTT Configuration
-MQTT_BROKER ="" # Define the IP address of the MQTT broker to connect to.
-# MQTT_BROKER ="localhost" 
-
+# MQTT_BROKER ="" # Define the IP address of the MQTT broker to connect to.
+MQTT_BROKER ="localhost" 
 MQTT_PORT = 1883
 
 class MQTTClient:
@@ -31,79 +32,45 @@ class MQTTClient:
         self.performance_data = {}
 
     def connect(self):
-        """Connect to the MQTT broker and start the client loop.
-
-        Establishes a connection to the MQTT broker with the specified host and port.
-        The loop is started to handle incoming messages asynchronously.
-        """        
-        self.client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        self.client.loop_start()
+        """Connect to the MQTT broker and start the client loop."""
+        try:
+            self.client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            self.client.loop_start()
+            logger.info("Connected to MQTT Broker at %s:%d", MQTT_BROKER, MQTT_PORT)
+        except Exception as e:
+            logger.error("Failed to connect to MQTT Broker: %s", str(e))
 
     def on_connect(self, client, userdata, flags, rc):
-        """Handle the connection result.
-
-        Parameters:
-            client (mqtt.Client): The MQTT client instance.
-            userdata: Private user data (not used).
-            flags (dict): Response flags sent by the broker.
-            rc (int): Connection result status code (0 indicates successful connection).
-
-        Prints connection status based on the result code.
-        """
+        """Handle the connection result."""
         if rc == 0:
-            print("Connected to MQTT Broker!")
+            logger.info("Successfully connected to MQTT Broker")
         else:
-            print("Failed to connect")
+            logger.warning("Failed to connect to MQTT Broker with code: %d", rc)
 
     def on_message(self, client, userdata, msg):
-        """Handle incoming messages on subscribed topics.
-
-        Parses performance data if the topic starts with 'activity/performance/'.
-
-        Parameters:
-            client (mqtt.Client): The MQTT client instance.
-            userdata: Private user data (not used).
-            msg (mqtt.MQTTMessage): The message received from the broker, containing
-                                    topic and payload attributes.
-        
-        Updates `correct_answers`, `incorrect_answers`, and `average_time` if
-        performance data is received, and sets `performance_data_received` to True.
-        """
-        print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
+        """Handle incoming messages on subscribed topics."""
         if msg.topic.startswith("activity/performance/"):
             try:
-                # Decode and parse JSON performance data
                 data = json.loads(msg.payload.decode())
                 self.performance_data = data
                 self.performance_data_received = True
-                print(f"Performance data received: {self.performance_data}")
             except json.JSONDecodeError:
-                print("Failed to parse JSON payload")
+                logger.error("Failed to parse JSON payload from topic: %s", msg.topic)
 
     def publish(self, topic, payload):
-        """Publish a message to a specified topic.
-
-        Parameters:
-            topic (str): The topic to which the message should be published.
-            payload (str): The message payload to be sent to the broker.
-        """
+        """Publish a message to a specified topic."""
         self.client.publish(topic, payload)
+        logger.debug("Published message to %s: %s", topic, payload)
 
     def subscribe(self, topic):
-        """Subscribe to a specified topic.
-
-        Parameters:
-            topic (str): The topic to subscribe to, enabling receipt of messages sent to it.
-        """
+        """Subscribe to a specified topic."""
         self.client.subscribe(topic)
+        logger.info("Subscribed to topic: %s", topic)
 
     def unsubscribe(self, topic):
-        """Unsubscribe from a specified topic.
-
-        Parameters:
-            topic (str): The topic to unsubscribe from, stopping receipt of its messages.
-        """
+        """Unsubscribe from a specified topic."""
         self.client.unsubscribe(topic)
+        logger.info("Unsubscribed from topic: %s", topic)
 
     def reset_performance_data(self):
         """Reset performance data flags and values."""

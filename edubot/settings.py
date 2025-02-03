@@ -244,5 +244,10 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
+        "activities": { 
+        "handlers": ["info_handler", "error_handler"],
+        "level": "DEBUG",
+        "propagate": False,
+        },
     },
 }
